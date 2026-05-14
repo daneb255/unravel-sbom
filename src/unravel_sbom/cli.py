@@ -495,16 +495,4 @@ def dtrack_lookup(
     click.echo(json.dumps(project, indent=2))
 
 
-# ---------------------------------------------------------------------------
-# Backwards-compatible entry point:
-# calling `unravel-sbom <dir>` (no sub-command) still works via `scan`.
-# ---------------------------------------------------------------------------
-
-
-# Make `scan` the default when no sub-command is provided
-@click.command(cls=click.CommandCollection, sources=[cli], hidden=True)
-def main() -> None:  # noqa: F811  (re-declaration is intentional)
-    pass
-
-
-main = cli  # noqa: F811  expose `cli` as the installed entry point
+main = cli
