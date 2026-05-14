@@ -354,7 +354,7 @@ class TestCLIScanUpload:
         with patch(
             "urllib.request.urlopen", return_value=_mock_response(response_body)
         ):
-            runner = CliRunner(mix_stderr=False)
+            runner = CliRunner()
             result = runner.invoke(
                 cli,
                 [
@@ -389,7 +389,7 @@ class TestCLIScanUpload:
         with patch(
             "urllib.request.urlopen", return_value=_mock_response(response_body)
         ):
-            runner = CliRunner(mix_stderr=False)
+            runner = CliRunner()
             result = runner.invoke(
                 cli,
                 [
@@ -414,7 +414,7 @@ class TestCLIScanUpload:
         bad_file = tmp_path / "bad.json"
         bad_file.write_text(json.dumps({"spdxVersion": "SPDX-2.3"}))
 
-        runner = CliRunner(mix_stderr=False)
+        runner = CliRunner()
         result = runner.invoke(
             cli,
             [
@@ -433,7 +433,7 @@ class TestCLIScanUpload:
         from unravel_sbom.cli import cli
 
         fixtures = Path(__file__).parent / "fixtures"
-        runner = CliRunner(mix_stderr=False)
+        runner = CliRunner()
         result = runner.invoke(
             cli,
             [
