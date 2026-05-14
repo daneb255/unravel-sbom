@@ -1,0 +1,37 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "unravel-sbom"
+version = "0.1.0"
+description = "Scan local development projects and generate SPDX v2.3 or CycloneDX 1.6 SBOMs"
+license = { file = "LICENSE" }
+requires-python = ">=3.10"
+dependencies = [
+    "click>=8.1",
+    "defusedxml>=0.7",
+    "toml>=0.10",
+    "tomli>=2.0; python_version < '3.11'",
+    "packageurl-python>=0.16",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "coverage>=7.0",
+    "ruff>=0.4",
+    "mypy>=1.10",
+    "bandit>=1.7",
+    "safety>=3.0",
+]
+
+[project.scripts]
+unravel-sbom = "unravel_sbom.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/unravel_sbom"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

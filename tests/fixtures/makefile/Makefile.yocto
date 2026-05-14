@@ -1,0 +1,15 @@
+# Yocto-style Makefile that fetches dependencies via git clone
+
+BRANCH = kirkstone
+
+GIT_POKY ?= git clone -b $(BRANCH) https://git.yoctoproject.org/git/poky
+GIT_OE   ?= git clone -b $(BRANCH) https://github.com/openembedded/meta-openembedded.git
+GIT_RPI  ?= git clone -b $(BRANCH) https://git.yoctoproject.org/git/meta-raspberrypi
+GIT_B96  ?= git clone -b $(BRANCH) https://github.com/96boards/meta-96boards.git
+
+.PHONY: download
+download:
+	@-if [ ! -d "poky" ] ; then $(GIT_POKY); fi
+	@-if [ ! -d "meta-openembedded" ] ; then $(GIT_OE); fi
+	@-if [ ! -d "meta-raspberrypi" ] ; then $(GIT_RPI); fi
+	@-if [ ! -d "meta-96boards" ] ; then $(GIT_B96); fi

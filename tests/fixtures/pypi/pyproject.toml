@@ -1,0 +1,13 @@
+[project]
+name = "my-python-app"
+version = "0.1.0"
+dependencies = [
+    "fastapi>=0.100",
+    "uvicorn[standard]>=0.23",
+    "sqlalchemy==2.0.21",
+]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+httpx = "^0.25.0"
+pydantic = {version = "^2.4", extras = ["email"]}

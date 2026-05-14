@@ -1,0 +1,145 @@
+"""Generate a valid CycloneDX 1.6 BOM document in JSON format.
+
+Specification: https://cyclonedx.org/docs/1.6/json/
+Schema:        https://github.com/CycloneDX/specification/blob/master/schema/bom-1.6.schema.json
+"""
+
+from __future__ import annotations
+
+import json
+import logging
+import uuid
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
+
+from unravel_sbom.models import Ecosystem, Package, ScanResult
+
+logger = logging.getLogger(__name__)
+
+SPEC_VERSION = "1.6"
+BOM_FORMAT = "CycloneDX"
+TOOL_NAME = "unravel-sbom"
+TOOL_VERSION = "0.1.0"
+
+# Map our ecosystem to the CycloneDX component type.
+# Everything that is a reusable software unit is "library".
+_ECOSYSTEM_TYPE: dict[Ecosystem, str] = {
+    Ecosystem.NPM: "library",
+    Ecosystem.PYPI: "library",
+    Ecosystem.CONAN: "library",
+    Ecosystem.GENERIC: "library",
+}
+
+
+def _serial_number() -> str:
+    return f"urn:uuid:{uuid.uuid4()}"
+
+
+def _licenses(license_id: str) -> list[dict[str, Any]]:
+    """Return a CycloneDX licenses array from a raw license string."""
+    if not license_id or license_id == "NOASSERTION":
+        return []
+    # CycloneDX supports full SPDX expressions in the "expression" form
+    # or individual { "license": { "id": "..." } } objects.
+    # For simple SPDX IDs we use the object form; for compound expressions
+    # (e.g. "MIT OR Apache-2.0") we use the expression form.
+    if " " in license_id:
+        return [{"expression": license_id}]
+    return [{"license": {"id": license_id, "acknowledgement": "declared"}}]
+
+
+def _supplier(supplier_str: str) -> dict[str, Any] | None:
+    """Convert our free-form supplier string to a CycloneDX organization object."""
+    if not supplier_str or supplier_str == "NOASSERTION":
+        return None
+    # Strip prefixes written by the SPDX reporter
+    for prefix in ("Organization: ", "Person: ", "Tool: ", "Makefile:"):
+        if supplier_str.startswith(prefix):
+            supplier_str = supplier_str[len(prefix) :]
+            break
+    return {"name": supplier_str}
+
+
+def _package_to_component(pkg: Package) -> dict[str, Any]:
+    comp: dict[str, Any] = {
+        "type": _ECOSYSTEM_TYPE.get(pkg.ecosystem, "library"),
+        "bom-ref": pkg.spdx_id,  # reuse the stable ID we already generate
+        "name": pkg.name,
+        "version": pkg.version or "unknown",
+        "purl": pkg.purl,
+    }
+
+    lic = _licenses(pkg.license_id)
+    if lic:
+        comp["licenses"] = lic
+
+    sup = _supplier(pkg.supplier)
+    if sup:
+        comp["supplier"] = sup
+
+    if pkg.homepage:
+        comp["externalReferences"] = [{"type": "website", "url": pkg.homepage}]
+
+    return comp
+
+
+def _deduplicate(packages: list[Package]) -> list[Package]:
+    seen: set[tuple[str, str, str]] = set()
+    out: list[Package] = []
+    for pkg in packages:
+        key = (pkg.name, pkg.ecosystem.value, pkg.version or "")
+        if key not in seen:
+            seen.add(key)
+            out.append(pkg)
+    return out
+
+
+def generate(
+    result: ScanResult,
+    scan_root: Path,
+    document_name: str | None = None,
+) -> dict[str, Any]:
+    """Build a CycloneDX 1.6 JSON BOM dict from a ScanResult."""
+    name = document_name or f"SBOM-{scan_root.resolve().name}"
+    packages = _deduplicate(result.packages)
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    doc: dict[str, Any] = {
+        "bomFormat": BOM_FORMAT,
+        "specVersion": SPEC_VERSION,
+        "serialNumber": _serial_number(),
+        "version": 1,
+        "metadata": {
+            "timestamp": now,
+            "tools": {
+                "components": [
+                    {
+                        "type": "application",
+                        "name": TOOL_NAME,
+                        "version": TOOL_VERSION,
+                    }
+                ]
+            },
+            "component": {
+                "type": "application",
+                "name": name,
+                "version": "unknown",
+            },
+        },
+        "components": [_package_to_component(p) for p in packages],
+    }
+
+    if not packages:
+        logger.warning("No packages found — CycloneDX BOM will be empty.")
+
+    return doc
+
+
+def write(doc: dict[str, Any], output_path: Path) -> None:
+    output_path.write_text(json.dumps(doc, indent=2), encoding="utf-8")
+    logger.info(
+        "CycloneDX BOM written to %s (%d components)",
+        output_path,
+        len(doc.get("components", [])),
+    )

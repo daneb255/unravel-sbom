@@ -1,0 +1,6 @@
+# Production dependencies
+requests==2.31.0
+click>=8.1,<9
+pydantic~=2.5.0
+numpy  # no version pin
+# -r base.txt  (filtered out)

@@ -1,0 +1,7 @@
+[requires]
+zlib/1.2.13
+boost/1.83.0@conan/stable
+openssl/3.1.2
+
+[generators]
+cmake
