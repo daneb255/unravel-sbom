@@ -12,6 +12,8 @@
 
 Whether you need SBOM generation for supply-chain compliance, vulnerability management, or license auditing, `unravel-sbom` gives you a machine-readable inventory of every dependency, complete with Package URLs (PURLs), SPDX license identifiers, and supplier metadata.
 
+![unravel-sbom demo](site/unravel-sbom.gif)
+
 ---
 
 ## Table of Contents
@@ -38,6 +40,10 @@ Whether you need SBOM generation for supply-chain compliance, vulnerability mana
 - [Roadmap](#roadmap)
 - [Contributing](#contributing)
 - [License](#license)
+
+---
+
+> ⭐ If `unravel-sbom` helps you, please consider [starring the repo](../../stargazers) to support the project!
 
 ---
 
@@ -130,7 +136,7 @@ Used together they close the full loop: pkggate stops bad packages coming in, `u
 **From source (recommended during development):**
 
 ```bash
-git clone https://github.com/your-org/unravel-sbom.git
+git clone https://github.com/daneb255/unravel-sbom.git
 cd unravel-sbom
 pip install -e .
 ```

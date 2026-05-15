@@ -1,0 +1,57 @@
+site_name: unravel-sbom
+site_description: Multi-ecosystem SBOM generator — SPDX 2.3 and CycloneDX 1.6 JSON, with native Dependency-Track upload.
+site_url: https://daneb255.github.io/unravel-sbom/
+repo_name: daneb255/unravel-sbom
+repo_url: https://github.com/daneb255/unravel-sbom
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.tabs.link
+  icon:
+    repo: fontawesome/brands/github
+
+nav:
+  - Home: index.md
+  - Installation: installation.md
+  - Quick Start: quickstart.md
+  - CLI Reference: cli-reference.md
+  - Output Formats: output-formats.md
+  - Dependency-Track: dependency-track.md
+  - Architecture: architecture.md
+  - Testing & CI: testing.md
+  - Roadmap: roadmap.md
+  - Contributing: contributing.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - toc:
+      permalink: true
