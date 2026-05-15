@@ -12,7 +12,7 @@
 
 Whether you need SBOM generation for supply-chain compliance, vulnerability management, or license auditing, `unravel-sbom` gives you a machine-readable inventory of every dependency, complete with Package URLs (PURLs), SPDX license identifiers, and supplier metadata.
 
-![unravel-sbom demo](site/unravel-sbom.gif)
+![unravel-sbom demo](docs/unravel-sbom.gif)
 
 ---
 

@@ -61,5 +61,8 @@ dmypy.json
 .ipynb_checkpoints/
 *.ipynb
 
+# MkDocs build output
+site/
+
 # Dependency-Track (never commit API keys or cached responses)
 dtrack-token.txt
