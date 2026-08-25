@@ -6,12 +6,12 @@ Schema: https://github.com/CycloneDX/specification/blob/master/schema/bom-1.6.sc
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
 import json
 import logging
+import uuid
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
-import uuid
 
 from unravel_sbom import __version__
 from unravel_sbom.models import Ecosystem, Package, ScanResult
