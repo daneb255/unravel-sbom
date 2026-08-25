@@ -94,9 +94,7 @@ def _package_to_component(pkg: Package) -> dict[str, Any]:
         comp["externalReferences"] = ext_refs
 
     if pkg.evidence:
-        comp["evidence"] = {
-            "occurrences": [{"location": ev} for ev in pkg.evidence]
-        }
+        comp["evidence"] = {"occurrences": [{"location": ev} for ev in pkg.evidence]}
 
     return comp
 

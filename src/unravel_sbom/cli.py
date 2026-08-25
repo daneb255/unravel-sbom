@@ -319,7 +319,8 @@ def scan_cmd(
 
     if result.errors:
         click.echo(
-            f"  {len(result.errors)} file(s) could not be parsed (see --verbose for details).",
+            f"  {len(result.errors)} file(s) could not be parsed "
+            "(see --verbose for details).",
             err=True,
         )
     click.echo(
@@ -336,8 +337,9 @@ def scan_cmd(
         )
         if not creator_email and not creator_url:
             click.echo(
-                "  Warning: no --creator-email/--creator-url given — SPDX output will use "
-                "a placeholder creator URL and is not fully BSI TR-03183-2 conformant.",
+                "  Warning: no --creator-email/--creator-url given — "
+                "SPDX output will use a placeholder creator URL and "
+                "is not fully BSI TR-03183-2 conformant.",
                 err=True,
             )
         doc = spdx_reporter.generate(
@@ -348,8 +350,9 @@ def scan_cmd(
             creator_url=creator_url,
         )
         spdx_reporter.write(doc, spdx_out)
+        count = spdx_reporter.package_count(doc)
         click.echo(
-            f"  SPDX 3.0.1    → {spdx_out}  ({spdx_reporter.package_count(doc)} packages)",
+            f"  SPDX 3.0.1    → {spdx_out}  ({count} packages)",
             err=True,
         )
 

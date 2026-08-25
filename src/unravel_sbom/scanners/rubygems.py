@@ -20,7 +20,7 @@ def _clean_gem_version(ver: str) -> str:
 
 
 class GemfileLockScanner(BaseScanner):
-    """Parses Gemfile.lock lockfiles for exact resolved Ruby gems and dependency trees."""
+    """Parses Gemfile.lock lockfiles for exact resolved Ruby gems."""
 
     MANIFEST_NAMES = ("gemfile.lock",)
 

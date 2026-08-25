@@ -94,7 +94,7 @@ def walk(
                         # A file can be matched by at most one scanner type at a time.
                         break
 
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.warning("Unexpected error processing %s: %s", entry, exc)
             aggregate.errors.append((entry, str(exc)))
 

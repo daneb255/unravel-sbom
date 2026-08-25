@@ -12,7 +12,8 @@ _CONFIGS = (
     r"testCompileOnly|testRuntimeOnly|annotationProcessor|classpath"
 )
 
-# String coordinate format: implementation "group:artifact:version" or implementation('group:artifact')
+# String coordinate format:
+# implementation "group:artifact:version" or implementation('group:artifact')
 _STRING_DEP_RE = re.compile(
     rf"(?:{_CONFIGS})\s*\(?\s*[\"']([^\"':]+):([^\"':]+)(?::([^\"':\$\)]+))?[\"']\s*\)?",
     re.IGNORECASE,
@@ -26,7 +27,7 @@ _MAP_DEP_RE = re.compile(
 
 
 class GradleScanner(BaseScanner):
-    """Parses Gradle build files (build.gradle, build.gradle.kts) and gradle.lockfile."""
+    """Parses Gradle build files (build.gradle, build.gradle.kts, lockfile)."""
 
     MANIFEST_NAMES = ("build.gradle", "build.gradle.kts", "gradle.lockfile")
 

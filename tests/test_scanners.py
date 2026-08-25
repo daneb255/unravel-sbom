@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-
 FIXTURES = Path(__file__).parent / "fixtures"
 
 
@@ -377,14 +376,22 @@ class TestMavenScanner:
 
     def test_resolves_properties(self):
         result = self._scan(FIXTURES / "maven" / "pom.xml")
-        spring = next(p for p in result.packages if p.name == "org.springframework:spring-core")
+        spring = next(
+            p for p in result.packages if p.name == "org.springframework:spring-core"
+        )
         assert spring.version == "6.1.2"
-        jackson = next(p for p in result.packages if p.name == "com.fasterxml.jackson.core:jackson-databind")
+        jackson = next(
+            p
+            for p in result.packages
+            if p.name == "com.fasterxml.jackson.core:jackson-databind"
+        )
         assert jackson.version == "2.16.0"
 
     def test_purl_format(self):
         result = self._scan(FIXTURES / "maven" / "pom.xml")
-        spring = next(p for p in result.packages if p.name == "org.springframework:spring-core")
+        spring = next(
+            p for p in result.packages if p.name == "org.springframework:spring-core"
+        )
         assert spring.purl == "pkg:maven/org.springframework/spring-core@6.1.2"
 
 
@@ -494,7 +501,7 @@ class TestNuGetScanner:
 
 
 class TestWalker:
-    def test_full_fixture_scan(self, tmp_path):
+    def test_full_fixture_scan(self):
         """Walk the entire fixtures directory and collect all packages."""
         from unravel_sbom.scanners import ALL_SCANNERS
         from unravel_sbom.walker import walk
@@ -640,17 +647,11 @@ class TestSpdxReporter:
         doc_email = generate(
             result, scan_root=Path("/tmp"), creator_email="dev@example.com"
         )
-        person_node = next(
-            n for n in doc_email["@graph"] if n.get("type") == "Person"
-        )
+        person_node = next(n for n in doc_email["@graph"] if n.get("type") == "Person")
         assert (
-            person_node["externalIdentifiers"][0]["externalIdentifierType"]
-            == "email"
+            person_node["externalIdentifiers"][0]["externalIdentifierType"] == "email"
         )
-        assert (
-            person_node["externalIdentifiers"][0]["identifier"]
-            == "dev@example.com"
-        )
+        assert person_node["externalIdentifiers"][0]["identifier"] == "dev@example.com"
 
         # Fallback (URL)
         doc_fallback = generate(result, scan_root=Path("/tmp"))
@@ -658,8 +659,7 @@ class TestSpdxReporter:
             n for n in doc_fallback["@graph"] if n.get("type") == "Organization"
         )
         assert (
-            org_node["externalIdentifiers"][0]["externalIdentifierType"]
-            == "urlScheme"
+            org_node["externalIdentifiers"][0]["externalIdentifierType"] == "urlScheme"
         )
         assert "unravel" in org_node["externalIdentifiers"][0]["identifier"]
 
@@ -706,6 +706,7 @@ class TestSpdxReporter:
 
     def test_cli_creator_fallback_warning(self, tmp_path):
         from click.testing import CliRunner
+
         from unravel_sbom.cli import cli
 
         runner = CliRunner()
@@ -719,6 +720,7 @@ class TestSpdxReporter:
 
     def test_cli_creator_email_option(self, tmp_path):
         from click.testing import CliRunner
+
         from unravel_sbom.cli import cli
 
         runner = CliRunner()
@@ -741,7 +743,6 @@ class TestSpdxReporter:
         loaded = json.loads(out_file.read_text())
         person = next(n for n in loaded["@graph"] if n.get("type") == "Person")
         assert person["externalIdentifiers"][0]["identifier"] == "auditor@example.com"
-
 
 
 # ---------------------------------------------------------------------------

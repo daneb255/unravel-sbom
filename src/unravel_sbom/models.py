@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Optional
 
 
 class Ecosystem(str, Enum):
@@ -25,9 +24,9 @@ class Package:
     ecosystem: Ecosystem
     license_id: str = "NOASSERTION"
     supplier: str = "NOASSERTION"
-    source_file: Optional[Path] = None
+    source_file: Path | None = None
     # Extra metadata populated by scanners that can resolve it
-    homepage: Optional[str] = None
+    homepage: str | None = None
     depends_on: list[str] = field(default_factory=list)
 
     @property
@@ -61,7 +60,10 @@ class Package:
                     namespace, short_name = name.rsplit("/", 1)
                     return str(
                         PackageURL(
-                            "golang", namespace=namespace, name=short_name, version=version
+                            "golang",
+                            namespace=namespace,
+                            name=short_name,
+                            version=version,
                         )
                     )
                 return str(PackageURL("golang", name=name, version=version))
@@ -72,7 +74,10 @@ class Package:
                     group_id, artifact_id = name.split(":", 1)
                     return str(
                         PackageURL(
-                            "maven", namespace=group_id, name=artifact_id, version=version
+                            "maven",
+                            namespace=group_id,
+                            name=artifact_id,
+                            version=version,
                         )
                     )
                 return str(PackageURL("maven", name=name, version=version))
@@ -106,6 +111,6 @@ class ScanResult:
     packages: list[Package] = field(default_factory=list)
     errors: list[tuple[Path, str]] = field(default_factory=list)
 
-    def merge(self, other: "ScanResult") -> None:
+    def merge(self, other: ScanResult) -> None:
         self.packages.extend(other.packages)
         self.errors.extend(other.errors)

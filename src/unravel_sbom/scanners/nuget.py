@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+
 import defusedxml.ElementTree as ET
 
 from unravel_sbom.models import Ecosystem, Package, ScanResult
@@ -13,7 +14,7 @@ def _strip_ns(tag: str) -> str:
 
 
 class NuGetScanner(BaseScanner):
-    """Parses .NET NuGet project manifests (.csproj, packages.config, packages.lock.json)."""
+    """Parses .NET NuGet manifests (.csproj, packages.config, packages.lock.json)."""
 
     MANIFEST_NAMES = (
         "packages.config",
@@ -46,7 +47,11 @@ class NuGetScanner(BaseScanner):
 
                             version = pkg_info.get("resolved") or "unknown"
                             sub_deps = pkg_info.get("dependencies", {})
-                            depends_on = list(sub_deps.keys()) if isinstance(sub_deps, dict) else []
+                            depends_on = (
+                                list(sub_deps.keys())
+                                if isinstance(sub_deps, dict)
+                                else []
+                            )
 
                             result.packages.append(
                                 Package(
@@ -59,7 +64,9 @@ class NuGetScanner(BaseScanner):
                                 )
                             )
             except Exception as exc:
-                result.errors.append((path, f"Failed to parse packages.lock.json: {exc}"))
+                result.errors.append(
+                    (path, f"Failed to parse packages.lock.json: {exc}")
+                )
             return result
 
         # Case 2: XML files (.csproj, .fsproj, packages.config, Directory.Build.props)
@@ -88,7 +95,7 @@ class NuGetScanner(BaseScanner):
                         )
             return result
 
-        # Project files (.csproj) containing <PackageReference Include="..." Version="..." />
+        # Project files (.csproj) containing PackageReference
         for elem in root.iter():
             tag = _strip_ns(elem.tag)
             if tag in ("PackageReference", "PackageVersion"):

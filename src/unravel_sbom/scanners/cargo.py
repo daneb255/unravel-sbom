@@ -17,7 +17,7 @@ def _clean_version(ver: str) -> str:
 
 
 class CargoLockScanner(BaseScanner):
-    """Parses Cargo.lock lockfiles for exact resolved Rust crates and dependency graphs."""
+    """Parses Cargo.lock lockfiles for exact resolved Rust crates."""
 
     MANIFEST_NAMES = ("cargo.lock",)
 
@@ -108,7 +108,12 @@ class CargoTomlScanner(BaseScanner):
                     if raw_ver:
                         version = _clean_version(str(raw_ver)) or "unknown"
                     elif "git" in spec:
-                        version = str(spec.get("branch") or spec.get("tag") or spec.get("rev") or "git")
+                        version = str(
+                            spec.get("branch")
+                            or spec.get("tag")
+                            or spec.get("rev")
+                            or "git"
+                        )
                     elif "path" in spec:
                         version = "path"
 

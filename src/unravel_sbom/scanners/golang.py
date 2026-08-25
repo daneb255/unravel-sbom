@@ -69,7 +69,9 @@ class GoModScanner(BaseScanner):
         for line in content.splitlines():
             # Strip comments
             comment_idx = line.find("//")
-            clean_line = line[:comment_idx].strip() if comment_idx != -1 else line.strip()
+            clean_line = (
+                line[:comment_idx].strip() if comment_idx != -1 else line.strip()
+            )
 
             if not clean_line:
                 continue

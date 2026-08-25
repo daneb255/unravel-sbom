@@ -32,7 +32,7 @@ class BaseScanner(ABC):
             result = self.scan(path)
             logger.debug("Scanned %s → %d packages", path, len(result.packages))
             return result
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.warning("Failed to parse %s: %s", path, exc)
             result = ScanResult()
             result.errors.append((path, str(exc)))

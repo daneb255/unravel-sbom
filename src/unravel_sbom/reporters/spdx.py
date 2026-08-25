@@ -1,4 +1,6 @@
-"""Generate a valid SPDX 3.0.1 document in JSON-LD format conformant with BSI TR-03183-2.
+"""Generate a valid SPDX 3.0.1 document in JSON-LD format.
+
+Conformant with BSI TR-03183-2.
 
 Specification: https://spdx.github.io/spdx-spec/v3.0.1/
 BSI Guideline: BSI TR-03183-2 (Cyber Resilience Act SBOM Requirements)
@@ -49,7 +51,7 @@ DEFAULT_CREATOR_URL = "https://github.com/daneb255/unravel"
 
 
 def _document_namespace(name: str, scan_root: Path) -> str:
-    digest = hashlib.sha1(  # noqa: S324
+    digest = hashlib.sha1(
         str(scan_root.resolve()).encode(), usedforsecurity=False
     ).hexdigest()[:12]
     safe_name = name.replace(" ", "-")
@@ -69,7 +71,7 @@ def _deduplicate(packages: list[Package]) -> list[Package]:
 
 
 def package_count(doc: dict[str, Any]) -> int:
-    """Return the number of software_Package elements in the SPDX 3.0.1 document graph."""
+    """Return the number of software_Package elements in the SPDX document."""
     return sum(
         1
         for node in doc.get("@graph", [])
@@ -190,24 +192,28 @@ def generate(
 
         completeness = "complete" if license_expr != "NOASSERTION" else "noAssertion"
 
-        relationship_nodes.append({
-            "type": "Relationship",
-            "spdxId": f"{ns}#rel-concluded-{pkg.spdx_id}",
-            "creationInfo": creation_info_id,
-            "from": pkg_id,
-            "relationshipType": "hasConcludedLicense",
-            "to": [license_node_id],
-            "completeness": completeness,
-        })
-        relationship_nodes.append({
-            "type": "Relationship",
-            "spdxId": f"{ns}#rel-declared-{pkg.spdx_id}",
-            "creationInfo": creation_info_id,
-            "from": pkg_id,
-            "relationshipType": "hasDeclaredLicense",
-            "to": [license_node_id],
-            "completeness": completeness,
-        })
+        relationship_nodes.append(
+            {
+                "type": "Relationship",
+                "spdxId": f"{ns}#rel-concluded-{pkg.spdx_id}",
+                "creationInfo": creation_info_id,
+                "from": pkg_id,
+                "relationshipType": "hasConcludedLicense",
+                "to": [license_node_id],
+                "completeness": completeness,
+            }
+        )
+        relationship_nodes.append(
+            {
+                "type": "Relationship",
+                "spdxId": f"{ns}#rel-declared-{pkg.spdx_id}",
+                "creationInfo": creation_info_id,
+                "from": pkg_id,
+                "relationshipType": "hasDeclaredLicense",
+                "to": [license_node_id],
+                "completeness": completeness,
+            }
+        )
 
         # Dependency relationships (dependsOn)
         dep_targets = [
@@ -215,15 +221,17 @@ def generate(
             for dep_name in pkg.depends_on
             if dep_name in name_to_spdx_id
         ]
-        relationship_nodes.append({
-            "type": "Relationship",
-            "spdxId": f"{ns}#rel-depends-{pkg.spdx_id}",
-            "creationInfo": creation_info_id,
-            "from": pkg_id,
-            "relationshipType": "dependsOn",
-            "to": dep_targets,
-            "completeness": "noAssertion",
-        })
+        relationship_nodes.append(
+            {
+                "type": "Relationship",
+                "spdxId": f"{ns}#rel-depends-{pkg.spdx_id}",
+                "creationInfo": creation_info_id,
+                "from": pkg_id,
+                "relationshipType": "dependsOn",
+                "to": dep_targets,
+                "completeness": "noAssertion",
+            }
+        )
 
     # 3. SpdxDocument Root
     doc_node: dict[str, Any] = {

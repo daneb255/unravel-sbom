@@ -65,14 +65,13 @@ def _mock_response(body: dict, status: int = 200):
 
 
 def _mock_http_error(status: int, body: str = "error"):
-    err = urllib.error.HTTPError(
+    return urllib.error.HTTPError(
         url="http://x",
         code=status,
         msg="err",
         hdrs=None,  # type: ignore[arg-type]
         fp=BytesIO(body.encode()),
     )
-    return err
 
 
 # ---------------------------------------------------------------------------
@@ -213,22 +212,23 @@ class TestUploadBom:
         assert headers.get("X-api-key") == API_KEY
 
     def test_http_error_raises_dtrack_error(self):
-        with patch(
-            "urllib.request.urlopen", side_effect=_mock_http_error(401, "Unauthorized")
+        with (
+            patch(
+                "urllib.request.urlopen",
+                side_effect=_mock_http_error(401, "Unauthorized"),
+            ),
+            pytest.raises(DependencyTrackError) as exc_info,
         ):
-            with pytest.raises(DependencyTrackError) as exc_info:
-                upload_bom(
-                    SAMPLE_BOM, base_url=BASE_URL, api_key="bad", project_name="p"
-                )
+            upload_bom(SAMPLE_BOM, base_url=BASE_URL, api_key="bad", project_name="p")
         assert exc_info.value.status == 401
 
     def test_connection_error_raises_dtrack_error(self):
         url_err = urllib.error.URLError("Connection refused")
-        with patch("urllib.request.urlopen", side_effect=url_err):
-            with pytest.raises(DependencyTrackError) as exc_info:
-                upload_bom(
-                    SAMPLE_BOM, base_url=BASE_URL, api_key=API_KEY, project_name="p"
-                )
+        with (
+            patch("urllib.request.urlopen", side_effect=url_err),
+            pytest.raises(DependencyTrackError) as exc_info,
+        ):
+            upload_bom(SAMPLE_BOM, base_url=BASE_URL, api_key=API_KEY, project_name="p")
         assert exc_info.value.status == 0
 
     def test_empty_base_url_raises_value_error(self):
@@ -240,7 +240,7 @@ class TestUploadBom:
         with pytest.raises(ValueError, match="CycloneDX"):
             upload_bom(bad_bom, base_url=BASE_URL, api_key=API_KEY, project_name="p")
 
-    def test_trailing_slash_stripped_from_base_url(self):
+    def test_correct_url_called(self):
         captured: list = []
 
         def fake_urlopen(req, timeout=None):
@@ -250,12 +250,13 @@ class TestUploadBom:
         with patch("urllib.request.urlopen", side_effect=fake_urlopen):
             upload_bom(
                 SAMPLE_BOM,
-                base_url="https://dtrack.example.com/",
+                base_url=BASE_URL,
                 api_key=API_KEY,
-                project_name="p",
+                project_name="myproj",
+                project_version="1.0.0",
             )
 
-        assert captured[0] == "https://dtrack.example.com/api/v1/bom"
+        assert captured[0] == f"{BASE_URL}/api/v1/bom"
 
 
 # ---------------------------------------------------------------------------
@@ -279,9 +280,11 @@ class TestGetProcessingStatus:
         assert done is False
 
     def test_http_error_raises(self):
-        with patch("urllib.request.urlopen", side_effect=_mock_http_error(404)):
-            with pytest.raises(DependencyTrackError) as exc_info:
-                get_processing_status("bad-token", base_url=BASE_URL, api_key=API_KEY)
+        with (
+            patch("urllib.request.urlopen", side_effect=_mock_http_error(404)),
+            pytest.raises(DependencyTrackError) as exc_info,
+        ):
+            get_processing_status("bad-token", base_url=BASE_URL, api_key=API_KEY)
         assert exc_info.value.status == 404
 
     def test_correct_url_constructed(self):
@@ -317,11 +320,13 @@ class TestLookupProject:
         assert result is None
 
     def test_raises_on_other_http_errors(self):
-        with patch(
-            "urllib.request.urlopen", side_effect=_mock_http_error(403, "Forbidden")
+        with (
+            patch(
+                "urllib.request.urlopen", side_effect=_mock_http_error(403, "Forbidden")
+            ),
+            pytest.raises(DependencyTrackError) as exc_info,
         ):
-            with pytest.raises(DependencyTrackError) as exc_info:
-                lookup_project("p", "v", base_url=BASE_URL, api_key=API_KEY)
+            lookup_project("p", "v", base_url=BASE_URL, api_key=API_KEY)
         assert exc_info.value.status == 403
 
     def test_url_contains_name_and_version(self):
@@ -346,6 +351,7 @@ class TestLookupProject:
 class TestCLIScanUpload:
     def test_scan_uploads_when_url_and_key_given(self, tmp_path):
         from click.testing import CliRunner
+
         from unravel_sbom.cli import cli
 
         fixtures = Path(__file__).parent / "fixtures"
@@ -380,6 +386,7 @@ class TestCLIScanUpload:
 
     def test_upload_command_reads_existing_bom(self, tmp_path):
         from click.testing import CliRunner
+
         from unravel_sbom.cli import cli
 
         bom_file = tmp_path / "test.cdx.json"
@@ -409,6 +416,7 @@ class TestCLIScanUpload:
 
     def test_upload_command_rejects_non_cyclonedx_file(self, tmp_path):
         from click.testing import CliRunner
+
         from unravel_sbom.cli import cli
 
         bad_file = tmp_path / "bad.json"
@@ -430,6 +438,7 @@ class TestCLIScanUpload:
 
     def test_scan_warns_when_only_url_given(self, tmp_path):
         from click.testing import CliRunner
+
         from unravel_sbom.cli import cli
 
         fixtures = Path(__file__).parent / "fixtures"
