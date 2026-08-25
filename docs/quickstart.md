@@ -3,7 +3,7 @@
 ## Basic scan
 
 ```bash
-# Scan current directory, write SPDX 2.3 JSON (default)
+# Scan current directory, write SPDX 3.0.1 JSON-LD (default)
 unravel-sbom scan .
 
 # Scan a specific project

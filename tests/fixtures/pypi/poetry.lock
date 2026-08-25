@@ -6,6 +6,9 @@ category = "main"
 optional = false
 python-versions = ">=3.8"
 
+[package.dependencies]
+anyio = ">=3.0"
+
 [[package]]
 name = "anyio"
 version = "4.1.0"

@@ -26,6 +26,8 @@ Scan **SOURCE** directory and write an SBOM — optionally upload to Dependency-
 | `-f, --format [spdx\|cyclonedx\|both]` | `spdx` | Output format. |
 | `--name TEXT` | `SBOM-<dir>` | Document/BOM name. |
 | `--max-depth INTEGER` | unlimited | Maximum directory recursion depth. |
+| `--creator-email EMAIL` | `$UNRAVEL_CREATOR_EMAIL` | Email identifying the SBOM creator (BSI TR-03183-2). |
+| `--creator-url URL` | `$UNRAVEL_CREATOR_URL` | URL identifying the SBOM creator. |
 | `--dtrack-url URL` | `$DTRACK_URL` | Dependency-Track base URL. |
 | `--dtrack-key KEY` | `$DTRACK_API_KEY` | Dependency-Track API key. |
 | `--dtrack-project NAME` | directory name | Project name in Dependency-Track. |

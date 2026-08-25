@@ -29,7 +29,11 @@ _ECOSYSTEM_TYPE: dict[Ecosystem, str] = {
     Ecosystem.PYPI: "library",
     Ecosystem.CONAN: "library",
     Ecosystem.GENERIC: "library",
+    Ecosystem.NATIVE: "library",
 }
+
+# Map our scope strings to CycloneDX scope values
+_SCOPE_MAP = {"runtime": "required", "build": "optional"}
 
 
 def _serial_number() -> str:
@@ -70,6 +74,9 @@ def _package_to_component(pkg: Package) -> dict[str, Any]:
         "purl": pkg.purl,
     }
 
+    if pkg.scope and pkg.scope in _SCOPE_MAP:
+        comp["scope"] = _SCOPE_MAP[pkg.scope]
+
     lic = _licenses(pkg.license_id)
     if lic:
         comp["licenses"] = lic
@@ -78,8 +85,18 @@ def _package_to_component(pkg: Package) -> dict[str, Any]:
     if sup:
         comp["supplier"] = sup
 
+    ext_refs: list[dict[str, Any]] = []
     if pkg.homepage:
-        comp["externalReferences"] = [{"type": "website", "url": pkg.homepage}]
+        ext_refs.append({"type": "website", "url": pkg.homepage})
+    if pkg.resolved_path:
+        ext_refs.append({"type": "distribution", "url": f"file://{pkg.resolved_path}"})
+    if ext_refs:
+        comp["externalReferences"] = ext_refs
+
+    if pkg.evidence:
+        comp["evidence"] = {
+            "occurrences": [{"location": ev} for ev in pkg.evidence]
+        }
 
     return comp
 

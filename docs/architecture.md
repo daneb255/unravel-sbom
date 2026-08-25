@@ -11,12 +11,18 @@ src/unravel_sbom/
 │   ├── base.py           ← BaseScanner ABC + safe_scan() error boundary
 │   ├── npm.py            ← PackageJsonScanner, PackageLockScanner
 │   ├── pypi.py           ← RequirementsTxtScanner, PyprojectTomlScanner, PoetryLockScanner
+│   ├── golang.py         ← GoModScanner, GoSumScanner
+│   ├── cargo.py          ← CargoTomlScanner, CargoLockScanner
+│   ├── maven.py          ← PomXmlScanner
+│   ├── gradle.py         ← GradleScanner
+│   ├── rubygems.py       ← GemfileScanner, GemfileLockScanner
+│   ├── nuget.py          ← NuGetScanner (.csproj, packages.config, packages.lock.json)
 │   ├── conan.py          ← ConanfileTxtScanner, ConanfilePyScanner (AST)
 │   ├── cmake.py          ← CMakeScanner (find_package, FetchContent, ExternalProject, CPM)
 │   ├── ros.py            ← PackageXmlScanner (REP-149 package.xml, ament variable expansion)
 │   └── makefile.py       ← MakefileScanner (-l flags, pkg-config, git clone / Yocto)
 ├── reporters/
-│   ├── spdx.py           ← SPDX 2.3 JSON document builder + deduplication
+│   ├── spdx.py           ← SPDX 3.0.1 JSON-LD document builder + deduplication
 │   └── cyclonedx.py      ← CycloneDX 1.6 JSON document builder + deduplication
 └── upload/
     └── dtrack.py         ← Dependency-Track HTTP client (upload, poll, lookup)
@@ -36,7 +42,7 @@ walker.walk()          — depth-first, skips .git / __pycache__ / node_modules 
     ▼
 ScanResult             — list[Package] + list[errors]
     │
-    ├── spdx_reporter.generate()   → SPDX 2.3 JSON dict
+    ├── spdx_reporter.generate()   → SPDX 3.0.1 JSON-LD dict
     └── cdx_reporter.generate()    → CycloneDX 1.6 JSON dict
                                            │
                                            └── dtrack.upload_bom() (optional)

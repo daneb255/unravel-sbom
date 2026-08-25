@@ -36,12 +36,18 @@ coverage report --fail-under=80
 | --- | --- |
 | npm scanner (package.json, package-lock.json v1–v3) | 6 |
 | PyPI scanner (requirements.txt, pyproject.toml, poetry.lock) | 9 |
+| Go modules scanner (go.mod, go.sum) | 5 |
+| Cargo scanner (Cargo.toml, Cargo.lock) | 5 |
+| Maven scanner (pom.xml, property expansion) | 3 |
+| Gradle scanner (build.gradle, build.gradle.kts, gradle.lockfile) | 2 |
+| RubyGems scanner (Gemfile, Gemfile.lock) | 2 |
+| NuGet scanner (.csproj, packages.config, packages.lock.json) | 3 |
 | Conan scanner (conanfile.txt, conanfile.py AST) | 6 |
 | CMake scanner (find_package, FetchContent, ExternalProject, CPM) | 26 |
 | ROS/ROS2 scanner (package.xml, ament variable expansion) | 20 |
 | Makefile scanner (LDFLAGS, LDLIBS, pkg-config, git clone) | 6 |
 | Walker (recursion, skip-dirs, error isolation) | 3 |
-| SPDX 2.3 reporter (fields, PURLs, deduplication, relationships) | 6 |
+| SPDX 3.0.1 reporter (fields, PURLs, deduplication, relationships) | 11 |
 | CycloneDX 1.6 reporter (fields, license forms, deduplication) | 11 |
 | Dependency-Track client (upload, poll, lookup, errors, CLI) | 26 |
 

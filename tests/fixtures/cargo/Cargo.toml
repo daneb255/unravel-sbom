@@ -1,0 +1,12 @@
+[package]
+name = "my-rust-app"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+serde = { version = "1.0.197", features = ["derive"] }
+tokio = "1.36.0"
+anyhow = "1.0.81"
+
+[dev-dependencies]
+tempfile = "3.10.1"
