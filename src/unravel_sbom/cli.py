@@ -9,8 +9,8 @@ from typing import Any
 
 import click
 
+from unravel_sbom import __version__
 from unravel_sbom.models import ScanResult
-from unravel_sbom.reporters import cyclonedx as cdx_reporter
 from unravel_sbom.reporters import spdx as spdx_reporter
 from unravel_sbom.scanners import ALL_SCANNERS
 from unravel_sbom.walker import walk
@@ -207,7 +207,7 @@ def _do_dtrack_upload(
 
 
 @click.group(context_settings={"help_option_names": ["-h", "--help"]})
-@click.version_option("0.1.0", prog_name="unravel-sbom")
+@click.version_option(__version__, prog_name="unravel-sbom")
 def cli() -> None:
     """unravel-sbom — generate and upload SBOMs for your projects."""
 
@@ -249,6 +249,21 @@ def cli() -> None:
     default=None,
     help="Maximum directory recursion depth (default: unlimited).",
 )
+@click.option(
+    "--creator-email",
+    envvar="UNRAVEL_CREATOR_EMAIL",
+    default=None,
+    metavar="EMAIL",
+    help="Email identifying the SBOM creator (BSI TR-03183-2). "
+    "Falls back to a placeholder URL with a warning if omitted.",
+)
+@click.option(
+    "--creator-url",
+    envvar="UNRAVEL_CREATOR_URL",
+    default=None,
+    metavar="URL",
+    help="URL identifying the SBOM creator, alternative to --creator-email.",
+)
 @_add_dtrack_options
 @click.option("-v", "--verbose", is_flag=True, help="Enable debug logging.")
 def scan_cmd(
@@ -257,6 +272,8 @@ def scan_cmd(
     fmt: str,
     document_name: str | None,
     max_depth: int | None,
+    creator_email: str | None,
+    creator_url: str | None,
     dtrack_url: str | None,
     dtrack_key: str | None,
     dtrack_project_name: str | None,
@@ -271,7 +288,7 @@ def scan_cmd(
 
     \b
     Output formats (--format):
-      spdx       SPDX 2.3 JSON              (default)
+      spdx       SPDX 3.0.1 JSON-LD (BSI TR-03183-2) (default)
       cyclonedx  CycloneDX 1.6 JSON
       both       writes one file of each
 
@@ -302,7 +319,8 @@ def scan_cmd(
 
     if result.errors:
         click.echo(
-            f"  {len(result.errors)} file(s) could not be parsed (see --verbose for details).",
+            f"  {len(result.errors)} file(s) could not be parsed "
+            "(see --verbose for details).",
             err=True,
         )
     click.echo(
@@ -317,15 +335,30 @@ def scan_cmd(
             if (fmt == "spdx" and output_path)
             else Path(f"{stem}.spdx.json")
         )
+        if not creator_email and not creator_url:
+            click.echo(
+                "  Warning: no --creator-email/--creator-url given — "
+                "SPDX output will use a placeholder creator URL and "
+                "is not fully BSI TR-03183-2 conformant.",
+                err=True,
+            )
         doc = spdx_reporter.generate(
-            result, scan_root=source, document_name=document_name
+            result,
+            scan_root=source,
+            document_name=document_name,
+            creator_email=creator_email,
+            creator_url=creator_url,
         )
         spdx_reporter.write(doc, spdx_out)
+        count = spdx_reporter.package_count(doc)
         click.echo(
-            f"  SPDX 2.3      → {spdx_out}  ({len(doc['packages'])} packages)", err=True
+            f"  SPDX 3.0.1    → {spdx_out}  ({count} packages)",
+            err=True,
         )
 
     if fmt in ("cyclonedx", "both"):
+        from unravel_sbom.reporters import cyclonedx as cdx_reporter
+
         cdx_out = (
             output_path
             if (fmt == "cyclonedx" and output_path)
@@ -341,6 +374,8 @@ def scan_cmd(
         )
 
     if dtrack_url and dtrack_key:
+        from unravel_sbom.reporters import cyclonedx as cdx_reporter
+
         # Always need a CycloneDX BOM for Dependency-Track
         if cdx_doc is None:
             cdx_doc = cdx_reporter.generate(
@@ -496,3 +531,6 @@ def dtrack_lookup(
 
 
 main = cli
+
+if __name__ == "__main__":
+    cli()

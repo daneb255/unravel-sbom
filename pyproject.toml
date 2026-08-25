@@ -4,16 +4,16 @@ build-backend = "hatchling.build"
 
 [project]
 name = "unravel-sbom"
-version = "0.1.0"
-description = "Scan local development projects and generate SPDX v2.3 or CycloneDX 1.6 SBOMs"
+version = "0.2.0"
+description = "Scan local development projects and generate SPDX 3.0.1 or CycloneDX 1.6 SBOMs"
 license = { file = "LICENSE" }
 requires-python = ">=3.10"
 dependencies = [
-    "click>=8.1",
-    "defusedxml>=0.7",
-    "toml>=0.10",
-    "tomli>=2.0; python_version < '3.11'",
-    "packageurl-python>=0.16",
+    "click==8.4.2",
+    "defusedxml==0.7.1",
+    "toml==0.10.2",
+    "tomli==2.4.1; python_version < '3.11'",
+    "packageurl-python==0.17.6",
 ]
 
 [project.optional-dependencies]
@@ -38,3 +38,40 @@ packages = ["src/unravel_sbom"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+exclude = [
+    ".git",
+    "__pycache__",
+    "dist",
+    "build",
+    ".venv",
+    "venv",
+    "tests/fixtures",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "W",
+    "F",
+    "I",
+    "UP",
+    "B",
+    "SIM",
+    "RUF",
+    "C4",
+]
+ignore = [
+    "E501",
+    "RUF012",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = [
+    "S101",
+    "ARG",
+    "PT011",
+]

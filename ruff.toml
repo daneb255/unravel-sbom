@@ -1,0 +1,35 @@
+line-length = 88
+target-version = "py310"
+exclude = [
+    ".git",
+    "__pycache__",
+    "dist",
+    "build",
+    ".venv",
+    "venv",
+    "tests/fixtures",
+]
+
+[lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "SIM", # flake8-simplify
+    "RUF", # Ruff-specific rules
+    "C4",  # flake8-comprehensions
+]
+ignore = [
+    "E501",   # line length handled by formatter
+    "RUF012", # mutable class attributes in third-party / fixture structures
+]
+
+[lint.per-file-ignores]
+"tests/*" = [
+    "S101",
+    "ARG",
+    "PT011",
+]

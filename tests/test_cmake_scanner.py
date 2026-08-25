@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-
 FIXTURE = Path(__file__).parent / "fixtures" / "cmake" / "CMakeLists.txt"
 
 

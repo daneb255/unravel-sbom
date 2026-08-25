@@ -84,23 +84,29 @@ class PackageLockScanner(BaseScanner):
                 name = info.get("name") or pkg_path.split("node_modules/")[-1]
                 version = info.get("version", "unknown")
                 license_id = _normalise_license(info.get("license"))
+                deps = info.get("dependencies", {})
+                depends_on = list(deps.keys()) if isinstance(deps, dict) else []
                 pkg = Package(
                     name=name,
                     version=version,
                     ecosystem=Ecosystem.NPM,
                     license_id=license_id,
                     source_file=path,
+                    depends_on=depends_on,
                 )
                 result.packages.append(pkg)
         else:
             # v1 format
             for name, info in data.get("dependencies", {}).items():
                 version = info.get("version", "unknown")
+                deps = info.get("requires", {}) or info.get("dependencies", {})
+                depends_on = list(deps.keys()) if isinstance(deps, dict) else []
                 pkg = Package(
                     name=name,
                     version=version,
                     ecosystem=Ecosystem.NPM,
                     source_file=path,
+                    depends_on=depends_on,
                 )
                 result.packages.append(pkg)
 

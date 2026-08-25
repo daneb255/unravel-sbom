@@ -1,1 +1,3 @@
-from unravel_sbom.reporters import cyclonedx as cyclonedx, spdx as spdx
+from unravel_sbom.reporters import spdx
+
+__all__ = ["spdx"]

@@ -314,7 +314,8 @@ class CMakeScanner(BaseScanner):
                         first = False
                         continue
                     first = False
-                    # Skip keywords, cmake imported targets (contain ::), unexpanded vars
+                    # Skip keywords, cmake imported targets (contain ::),
+                    # and unexpanded vars
                     if (
                         tok.lower() in _AMENT_KEYWORDS
                         or "::" in tok

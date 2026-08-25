@@ -97,12 +97,14 @@ def upload_bom(
     *project_name* + *project_version* with optional auto-creation.
 
     Args:
-        bom_dict:        The CycloneDX BOM as a Python dict (from cdx_reporter.generate()).
-        base_url:        Dependency-Track base URL, e.g. "https://dtrack.example.com".
-        api_key:         API key with BOM_UPLOAD (or PORTFOLIO_MANAGEMENT) permission.
+        bom_dict:        The CycloneDX BOM as a Python dict
+                         (from cdx_reporter.generate()).
+        base_url:        Dependency-Track base URL, e.g.
+                         "https://dtrack.example.com".
+        api_key:         API key with BOM_UPLOAD (or PORTFOLIO_MANAGEMENT).
         project_name:    Project name in Dependency-Track.
         project_version: Project version string.
-        project_uuid:    If known, target a specific project by UUID (skips name lookup).
+        project_uuid:    If known, target a specific project by UUID.
         auto_create:     Create the project if it does not exist yet.
         timeout:         HTTP timeout in seconds.
 

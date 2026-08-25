@@ -3,12 +3,12 @@
 ## v0.2 — Ecosystem coverage
 
 - [x] **CMake** — shipped in v0.1
-- [ ] **Go modules** — `go.mod` / `go.sum`
-- [ ] **Cargo (Rust)** — `Cargo.toml` / `Cargo.lock`
-- [ ] **Maven (Java)** — `pom.xml`
-- [ ] **Gradle** — `build.gradle` / `build.gradle.kts`
-- [ ] **RubyGems** — `Gemfile` / `Gemfile.lock`
-- [ ] **NuGet (.NET)** — `*.csproj` / `packages.config`
+- [x] **Go modules** — `go.mod` / `go.sum`
+- [x] **Cargo (Rust)** — `Cargo.toml` / `Cargo.lock`
+- [x] **Maven (Java)** — `pom.xml`
+- [x] **Gradle** — `build.gradle` / `build.gradle.kts`
+- [x] **RubyGems** — `Gemfile` / `Gemfile.lock`
+- [x] **NuGet (.NET)** — `*.csproj` / `packages.config` / `packages.lock.json`
 
 ## v0.3 — Richer metadata
 

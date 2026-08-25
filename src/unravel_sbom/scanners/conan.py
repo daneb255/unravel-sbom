@@ -10,7 +10,8 @@ from unravel_sbom.scanners.base import BaseScanner
 
 logger = logging.getLogger(__name__)
 
-# conanfile.txt: lines under [requires] look like "zlib/1.2.11" or "boost/1.79.0@conan/stable"
+# conanfile.txt: lines under [requires] look like
+# "zlib/1.2.11" or "boost/1.79.0@conan/stable"
 _REQUIRES_RE = re.compile(
     r"^(?P<name>[A-Za-z0-9_.\-]+)/(?P<version>[A-Za-z0-9._\-]+)(?:@[^\s]*)?"
 )
@@ -60,7 +61,8 @@ class ConanfilePyScanner(BaseScanner):
             if not isinstance(node, ast.ClassDef):
                 continue
             for item in ast.walk(node):
-                # class-level assignments: requires = "zlib/1.2.11" or requires = ["zlib/1.2.11"]
+                # class-level assignments:
+                # requires = "zlib/1.2.11" or requires = ["zlib/1.2.11"]
                 if isinstance(item, ast.Assign):
                     for target in item.targets:
                         if isinstance(target, ast.Name) and target.id in (

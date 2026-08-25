@@ -133,12 +133,15 @@ class PoetryLockScanner(BaseScanner):
             version = entry.get("version", "unknown")
             if not name:
                 continue
+            deps = entry.get("dependencies", {})
+            depends_on = list(deps.keys()) if isinstance(deps, dict) else []
             result.packages.append(
                 Package(
                     name=name,
                     version=version,
                     ecosystem=Ecosystem.PYPI,
                     source_file=path,
+                    depends_on=depends_on,
                 )
             )
         return result

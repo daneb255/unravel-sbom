@@ -82,11 +82,13 @@ class TestPackageXmlScanner:
             assert pkg.source_file == PKG_XML
 
     def test_malformed_xml_raises_in_scan(self, tmp_path):
+        import xml.etree.ElementTree as ET
+
         from unravel_sbom.scanners.ros import PackageXmlScanner
 
         bad = tmp_path / "package.xml"
         bad.write_text("<package><name>foo</name><<broken>")
-        with pytest.raises(Exception):
+        with pytest.raises(ET.ParseError):
             PackageXmlScanner().scan(bad)
 
     def test_safe_scan_isolates_error(self, tmp_path):

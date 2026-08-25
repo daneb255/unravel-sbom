@@ -1,16 +1,19 @@
-# unravel-sbom
+# unravel-sbom: Multi-Ecosystem SBOM Generator (SPDX 3.0.1 & CycloneDX 1.6)
 
-**Generate accurate, standards-compliant Software Bills of Materials (SBOMs) from your local development projects — in seconds.**
+**Fast, accurate, standards-compliant Software Bill of Materials (SBOM) generator engineered for EU Cyber Resilience Act (CRA) compliance under BSI TR-03183-2, CycloneDX 1.6, and OWASP Dependency-Track integration.**
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
-[![SPDX 2.3](https://img.shields.io/badge/SPDX-2.3-green.svg)](https://spdx.github.io/spdx-spec/v2.3/)
+[![PyPI version](https://img.shields.io/pypi/v/unravel-sbom.svg)](https://pypi.org/project/unravel-sbom/)
+[![SPDX 3.0.1](https://img.shields.io/badge/SPDX-3.0.1%20JSON--LD-green.svg)](https://spdx.github.io/spdx-spec/v3.0.1/)
+[![BSI TR-03183-2](https://img.shields.io/badge/BSI%20TR--03183--2-CRA%20Ready-blue.svg)](https://www.bsi.bund.de/)
 [![CycloneDX 1.6](https://img.shields.io/badge/CycloneDX-1.6-orange.svg)](https://cyclonedx.org/docs/1.6/)
 [![Dependency-Track](https://img.shields.io/badge/Dependency--Track-ready-blue.svg)](https://dependencytrack.org/)
+[![Docker](https://img.shields.io/badge/Docker-ready-2496ED.svg)](https://www.docker.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-`unravel-sbom` is an open-source Python CLI tool that recursively scans multi-ecosystem development projects and produces valid SBOMs in **[SPDX v2.3](https://spdx.github.io/spdx-spec/v2.3/)** and **[CycloneDX 1.6](https://cyclonedx.org/docs/1.6/)** JSON format. It covers **npm**, **PyPI**, **Conan**, **CMake**, **ROS/ROS2**, and **Makefile**-based C/C++ projects — and pushes results directly to **[Dependency-Track](https://dependencytrack.org/)** in a single command.
+`unravel-sbom` is an open-source Python CLI tool that recursively scans multi-ecosystem development projects and produces valid SBOMs in **[SPDX 3.0.1](https://spdx.github.io/spdx-spec/v3.0.1/)** (BSI TR-03183-2 conformant JSON-LD) and **[CycloneDX 1.6](https://cyclonedx.org/docs/1.6/)** JSON format. It covers **npm**, **PyPI**, **Conan**, **CMake**, **ROS/ROS2**, and **Makefile**-based C/C++ projects — and pushes results directly to **[Dependency-Track](https://dependencytrack.org/)** in a single command.
 
-Whether you need SBOM generation for supply-chain compliance, vulnerability management, or license auditing, `unravel-sbom` gives you a machine-readable inventory of every dependency, complete with Package URLs (PURLs), SPDX license identifiers, and supplier metadata.
+Whether you need SBOM generation for software supply-chain security compliance (EU CRA, US Executive Order 14028, NTIA), vulnerability management, or license auditing, `unravel-sbom` delivers a complete, machine-readable inventory of every dependency with Package URLs (PURLs), SPDX license identifiers, and resolved dependency graphs.
 
 ![unravel-sbom demo](docs/unravel-sbom.gif)
 
@@ -27,13 +30,14 @@ Whether you need SBOM generation for supply-chain compliance, vulnerability mana
 - [Quick Start](#quick-start)
 - [CLI Reference](#cli-reference)
 - [Output Formats](#output-formats)
-  - [SPDX 2.3](#spdx-23)
+  - [SPDX 3.0.1 (BSI TR-03183-2 / CRA Conformance)](#spdx-301-bsi-tr-03183-2--cra-conformance)
   - [CycloneDX 1.6](#cyclonedx-16)
 - [Dependency-Track Integration](#dependency-track-integration)
   - [Scan and Upload in One Step](#scan-and-upload-in-one-step)
   - [Upload an Existing BOM](#upload-an-existing-bom)
   - [Project Lookup](#project-lookup)
   - [CI/CD Pipeline Example](#cicd-pipeline-example)
+- [Frequently Asked Questions (FAQ)](#frequently-asked-questions-faq)
 - [Architecture](#architecture)
 - [Running Tests](#running-tests)
 - [CI/CD and Publishing](#cicd-and-publishing)
@@ -53,7 +57,7 @@ Supply-chain security is no longer optional. Regulations like the US Executive O
 
 `unravel-sbom` was built around three principles:
 
-1. **Correctness first.** Every output field maps directly to the SPDX 2.3 and CycloneDX 1.6 specifications. PURLs are generated via the official `packageurl-python` library. Documents are ready for immediate ingestion by Grype, Dependency-Track, FOSSA, and other SBOM-aware tools.
+1. **Correctness first.** Every output field maps directly to the SPDX 3.0.1 (BSI TR-03183-2) and CycloneDX 1.6 specifications. PURLs are generated via the official `packageurl-python` library. Documents are ready for immediate ingestion by Grype, Dependency-Track, FOSSA, and other SBOM-aware tools.
 2. **Resilience over rigidity.** A single malformed `package.json` should never abort a scan of thousands of files. Each parser is isolated — errors are collected and reported, not thrown.
 3. **Zero heavy dependencies.** No Docker daemon, no language runtimes beyond Python 3.10. Point it at a directory, get a standards-compliant SBOM, and optionally push it to Dependency-Track — all from one command.
 
@@ -100,7 +104,7 @@ Used together they close the full loop: pkggate stops bad packages coming in, `u
 ## Features
 
 - **Recursive multi-ecosystem scanning** — one command covers the entire project tree
-- **SPDX 2.3 JSON output** — validated against the official specification
+- **SPDX 3.0.1 JSON-LD output** — conformant with BSI TR-03183-2 (CRA SBOM requirements for logical components)
 - **CycloneDX 1.6 JSON output** — alternative format for Dependency-Track and other tools
 - **Both formats simultaneously** — `--format both` writes `.spdx.json` and `.cdx.json` in one pass
 - **Native Dependency-Track upload** — push the BOM directly via `PUT /api/v1/bom` with async token polling
@@ -124,6 +128,12 @@ Used together they close the full loop: pkggate stops bad packages coming in, `u
 |-----------|--------------|-------|
 | **npm / Node.js** | `package.json`, `package-lock.json` | Lock file (v1/v2/v3) preferred for exact versions; scoped packages (`@scope/name`) fully supported |
 | **PyPI / Python** | `requirements.txt`, `pyproject.toml`, `poetry.lock` | Handles PEP-621, Hatch, Flit, and Poetry formats; `python` itself is excluded |
+| **Go modules** | `go.mod`, `go.sum` | Direct/indirect module dependencies, module exclusion, exact hashes in `go.sum` |
+| **Cargo / Rust** | `Cargo.toml`, `Cargo.lock` | Parses `[[package]]` trees, dependency graphs, workspace and target-specific dependencies |
+| **Maven / Java** | `pom.xml` | Safe XML parsing, XML namespace stripping, property interpolation (`${property}`), `groupId:artifactId` coordinates |
+| **Gradle / Kotlin** | `build.gradle`, `build.gradle.kts`, `gradle.lockfile` | Groovy & Kotlin DSL string and map notation, exact locked versions from `gradle.lockfile` |
+| **RubyGems / Ruby** | `Gemfile`, `Gemfile.lock` | Complete `specs` hierarchy, transitive dependency resolution, and version constraints |
+| **NuGet / .NET** | `*.csproj`, `*.fsproj`, `*.vbproj`, `packages.config`, `packages.lock.json` | PackageReference, PackageVersion, packages.config, and packages.lock.json dependency trees |
 | **Conan / C++** | `conanfile.txt`, `conanfile.py` | AST-based parsing of `.py` files; resolves `requires`, `build_requires`, and `self.requires()` calls |
 | **CMake / C++** | `CMakeLists.txt` | Extracts `find_package()`, `FetchContent_Declare()`, `ExternalProject_Add()`, `CPM_AddPackage()`; normalises `v`-prefixed tags, `tags/v…`, and dash-separated version tags; skips CMake built-ins |
 | **ROS / ROS2** | `package.xml`, `CMakeLists.txt` | Parses REP-149 `package.xml` for all dep tags (`<depend>`, `<build_depend>`, `<exec_depend>`, `<test_depend>`, etc.) with version constraints; expands CMake `${VAR}` lists in `ament_auto_find_build_dependencies()` |
@@ -141,10 +151,22 @@ cd unravel-sbom
 pip install -e .
 ```
 
+**Using Docker:**
+
+```bash
+# Build the Docker image
+docker build -t unravel-sbom .
+
+# Scan current directory and generate an SPDX 3.0.1 SBOM
+docker run --rm -v "$(pwd):/scan" unravel-sbom scan . --creator-email "dev@example.com"
+```
+
 **Requirements:**
 
 - Python 3.10 or later
 - `click >= 8.1`
+- `defusedxml >= 0.7`
+- `toml >= 0.10`
 - `packageurl-python >= 0.16`
 - `tomli >= 2.0` (Python < 3.11 only)
 
@@ -153,7 +175,7 @@ pip install -e .
 ## Quick Start
 
 ```bash
-# Scan and write SPDX 2.3 JSON (default)
+# Scan and write SPDX 3.0.1 JSON-LD (default)
 unravel-sbom scan .
 
 # Scan a C++ project using CMake
@@ -209,6 +231,8 @@ Options:
                                   Output format  [default: spdx]
   --name TEXT                     Document/BOM name  [default: SBOM-<dir>]
   --max-depth INTEGER             Maximum recursion depth  [default: unlimited]
+  --creator-email EMAIL           Email identifying the SBOM creator (BSI TR-03183-2)  [$UNRAVEL_CREATOR_EMAIL]
+  --creator-url URL               URL identifying the SBOM creator  [$UNRAVEL_CREATOR_URL]
   --dtrack-url URL                Dependency-Track base URL  [$DTRACK_URL]
   --dtrack-key KEY                Dependency-Track API key  [$DTRACK_API_KEY]
   --dtrack-project NAME           Project name  [default: directory name]
@@ -256,39 +280,123 @@ Options:
 
 ## Output Formats
 
-### SPDX 2.3
+### SPDX 3.0.1 (BSI TR-03183-2 / CRA Conformance)
 
-Every package entry in the SPDX JSON output includes:
+The German Federal Office for Information Security (**BSI**) published Technical Guideline **TR-03183-2**, which specifies requirements for Software Bills of Materials (SBOMs) under the European **Cyber Resilience Act (CRA)**.
+
+BSI TR-03183-2 mandates the use of **SPDX ≥ 3.0.1** (or CycloneDX ≥ 1.6) and defines strict baseline requirements for document-level and component-level metadata.
+
+#### Logical Components vs. Fully Described Components (§3.2.2)
+
+`unravel-sbom` parses source-code manifests and dependency lockfiles (such as `package-lock.json`, `poetry.lock`, `requirements.txt`, CMake, Conan, and Makefiles) directly from development trees without requiring deployed binary artefacts.
+
+Consequently, every package is modeled as a **BSI Logical Component** (§3.2.2):
+
+- **Included Mandatory Fields:** Creator identity (`originatedBy`), component name (`name`), exact version (`software_packageVersion`), dependency relationships (`dependsOn`), distribution licenses (`hasConcludedLicense`), declared licenses (`hasDeclaredLicense`), and unique Package URLs (`packageUrl`).
+- **Deliberately Excluded Physical Properties:** File hashes (`SHA-512`), artifact filenames, and executable/archive attributes only apply to "fully described components" (§3.2.1) and are omitted honestly rather than fabricated.
+- **Prohibition of Vulnerability Data:** In accordance with BSI TR-03183-2, SBOMs generated by `unravel-sbom` strictly contain inventory and relationship data, and never include vulnerability or CVE findings (which belong in separate VEX documents).
+
+Document graph structure:
 
 ```json
 {
-  "SPDXID": "SPDXRef-npm-express-4-18-2",
-  "name": "express",
-  "versionInfo": "4.18.2",
-  "downloadLocation": "NOASSERTION",
-  "filesAnalyzed": false,
-  "licenseConcluded": "MIT",
-  "licenseDeclared": "MIT",
-  "copyrightText": "NOASSERTION",
-  "supplier": "NOASSERTION",
-  "externalRefs": [
+  "@context": "https://spdx.org/rdf/3.0.1/spdx-context.jsonld",
+  "@graph": [
     {
-      "referenceCategory": "PACKAGE-MANAGER",
-      "referenceType": "purl",
-      "referenceLocator": "pkg:npm/express@4.18.2"
+      "type": "SpdxDocument",
+      "spdxId": "https://unravel-sbom.local/SBOM-my-app-a1b2c3d4e5f6#SPDXRef-DOCUMENT",
+      "name": "SBOM-my-app",
+      "dataLicense": "https://spdx.org/licenses/CC0-1.0",
+      "creationInfo": "https://unravel-sbom.local/SBOM-my-app-a1b2c3d4e5f6#creationinfo",
+      "rootElement": [
+        "https://unravel-sbom.local/SBOM-my-app-a1b2c3d4e5f6#SPDXRef-npm-express-4-18-2"
+      ]
+    },
+    {
+      "type": "CreationInfo",
+      "spdxId": "https://unravel-sbom.local/SBOM-my-app-a1b2c3d4e5f6#creationinfo",
+      "specVersion": "3.0.1",
+      "created": "2026-08-25T12:00:00Z",
+      "createdBy": [
+        "https://unravel-sbom.local/SBOM-my-app-a1b2c3d4e5f6#creator-agent"
+      ]
+    },
+    {
+      "type": "Person",
+      "spdxId": "https://unravel-sbom.local/SBOM-my-app-a1b2c3d4e5f6#creator-agent",
+      "creationInfo": "https://unravel-sbom.local/SBOM-my-app-a1b2c3d4e5f6#creationinfo",
+      "name": "dev",
+      "externalIdentifiers": [
+        {
+          "type": "ExternalIdentifier",
+          "externalIdentifierType": "email",
+          "identifier": "dev@example.com"
+        }
+      ]
+    },
+    {
+      "type": "software_Package",
+      "spdxId": "https://unravel-sbom.local/SBOM-my-app-a1b2c3d4e5f6#SPDXRef-npm-express-4-18-2",
+      "creationInfo": "https://unravel-sbom.local/SBOM-my-app-a1b2c3d4e5f6#creationinfo",
+      "name": "express",
+      "software_packageVersion": "4.18.2",
+      "originatedBy": [
+        "https://unravel-sbom.local/SBOM-my-app-a1b2c3d4e5f6#creator-agent"
+      ],
+      "externalIdentifiers": [
+        {
+          "type": "ExternalIdentifier",
+          "externalIdentifierType": "packageUrl",
+          "identifier": "pkg:npm/express@4.18.2"
+        }
+      ]
+    },
+    {
+      "type": "simpleLicensing_LicenseExpression",
+      "spdxId": "https://unravel-sbom.local/SBOM-my-app-a1b2c3d4e5f6#license-SPDXRef-npm-express-4-18-2",
+      "creationInfo": "https://unravel-sbom.local/SBOM-my-app-a1b2c3d4e5f6#creationinfo",
+      "simpleLicensing_licenseExpression": "MIT"
+    },
+    {
+      "type": "Relationship",
+      "spdxId": "https://unravel-sbom.local/SBOM-my-app-a1b2c3d4e5f6#rel-concluded-SPDXRef-npm-express-4-18-2",
+      "creationInfo": "https://unravel-sbom.local/SBOM-my-app-a1b2c3d4e5f6#creationinfo",
+      "from": "https://unravel-sbom.local/SBOM-my-app-a1b2c3d4e5f6#SPDXRef-npm-express-4-18-2",
+      "relationshipType": "hasConcludedLicense",
+      "to": [
+        "https://unravel-sbom.local/SBOM-my-app-a1b2c3d4e5f6#license-SPDXRef-npm-express-4-18-2"
+      ],
+      "completeness": "complete"
+    },
+    {
+      "type": "Relationship",
+      "spdxId": "https://unravel-sbom.local/SBOM-my-app-a1b2c3d4e5f6#rel-depends-SPDXRef-npm-express-4-18-2",
+      "creationInfo": "https://unravel-sbom.local/SBOM-my-app-a1b2c3d4e5f6#creationinfo",
+      "from": "https://unravel-sbom.local/SBOM-my-app-a1b2c3d4e5f6#SPDXRef-npm-express-4-18-2",
+      "relationshipType": "dependsOn",
+      "to": [
+        "https://unravel-sbom.local/SBOM-my-app-a1b2c3d4e5f6#SPDXRef-npm-lodash-4-17-21"
+      ],
+      "completeness": "noAssertion"
     }
   ]
 }
 ```
 
-| Document field | Value |
-| --- | --- |
-| `spdxVersion` | `SPDX-2.3` |
-| `dataLicense` | `CC0-1.0` |
-| `creationInfo.creators` | `Tool: unravel-sbom-0.1.0` |
-| `relationships` | `DOCUMENT DESCRIBES <package>` for every entry |
+| Mandatory BSI TR-03183-2 Field | SPDX 3.0.1 Element / Property | Notes |
+| --- | --- | --- |
+| **SBOM Creator** | `CreationInfo.createdBy` → `Person` / `Organization` | Provided via `--creator-email` or `--creator-url` |
+| **Component Creator** | `software_Package.originatedBy` | References creator agent |
+| **Component Name** | `software_Package.name` | Normalized package name |
+| **Component Version** | `software_Package.software_packageVersion` | Falls back to manifest file `st_mtime` ISO 8601 string or `NOASSERTION` |
+| **Unique Identifiers** | `externalIdentifiers` (`packageUrl`) | Standard PURL string (`pkg:pypi/...`, `pkg:npm/...`) |
+| **Distribution Licences** | `Relationship` (`hasConcludedLicense`) | Concluded license expression |
+| **Original Licences** | `Relationship` (`hasDeclaredLicense`) | Declared license expression |
+| **Dependencies** | `Relationship` (`dependsOn`) | Direct package dependencies from lockfiles |
 
-### CycloneDX 1.6
+---
+
+## CycloneDX 1.6
 
 Every component in the CycloneDX JSON output includes:
 
@@ -451,6 +559,46 @@ sbom:
 
 ---
 
+## Frequently Asked Questions (FAQ)
+
+<details>
+<summary><strong>What is an SBOM and why is it mandatory under the EU Cyber Resilience Act (CRA)?</strong></summary>
+
+A Software Bill of Materials (SBOM) is a comprehensive, machine-readable inventory of software components, dependencies, and hierarchical relationships making up a software product. Under the EU Cyber Resilience Act (CRA) and US Executive Order 14028, maintaining an up-to-date SBOM is a mandatory compliance requirement for placing connected digital products and software on the market.
+</details>
+
+<details>
+<summary><strong>What is BSI TR-03183-2 and why is SPDX 3.0.1 required?</strong></summary>
+
+The German Federal Office for Information Security (**BSI**) published Technical Guideline **TR-03183-2** as the foundational standard for CRA-compliant SBOM generation. It explicitly requires **SPDX ≥ 3.0.1** (or CycloneDX ≥ 1.6), enforcing mandatory creator identity, package URLs (PURLs), license expressions, and dependency relationship trees.
+</details>
+
+<details>
+<summary><strong>How does unravel-sbom distinguish between logical and physical components?</strong></summary>
+
+In BSI TR-03183-2 (§3.2.2), packages detected from source code manifests and lockfiles are classified as **logical components**. They accurately represent declared dependency trees without requiring compiled binary files. `unravel-sbom` captures all required logical metadata (creator, name, version, PURL, declared/concluded licenses, `dependsOn` edges) while omitting binary-specific attributes (such as SHA-512 hashes and executable flags) to maintain strict compliance.
+</details>
+
+<details>
+<summary><strong>Why are CVE vulnerabilities omitted from generated SBOMs?</strong></summary>
+
+BSI TR-03183-2 explicitly specifies that SBOMs must not embed point-in-time vulnerability data. Software vulnerability statuses change continuously; storing CVEs statically in an SBOM causes immediate obsolescence. Vulnerability management is handled dynamically by platforms like **Dependency-Track**, **Grype**, or through companion **VEX** (Vulnerability Exploitability eXchange) feeds.
+</details>
+
+<details>
+<summary><strong>Can unravel-sbom scan multi-language and embedded monorepos?</strong></summary>
+
+Yes. `unravel-sbom` was designed specifically for multi-ecosystem repositories, firmware trees, and robotics workspaces. A single command recursively parses npm, Python (Pip/Poetry/Hatch), Conan, CMake (`find_package`, `FetchContent`, `CPM`), ROS/ROS2 (`package.xml`), and C/C++ Makefiles.
+</details>
+
+<details>
+<summary><strong>How does unravel-sbom integrate with Dependency-Track and CI/CD?</strong></summary>
+
+`unravel-sbom` includes a native client for OWASP Dependency-Track. With a single CLI invocation (or within GitHub Actions / GitLab CI), it scans the codebase, generates a CycloneDX 1.6 BOM, uploads it via `PUT /api/v1/bom`, and optionally polls the server until vulnerability analysis is complete.
+</details>
+
+---
+
 ## Architecture
 
 ```
@@ -462,12 +610,18 @@ unravel_sbom/
 │   ├── base.py           ← BaseScanner ABC + safe_scan() error boundary
 │   ├── npm.py            ← PackageJsonScanner, PackageLockScanner
 │   ├── pypi.py           ← RequirementsTxtScanner, PyprojectTomlScanner, PoetryLockScanner
+│   ├── golang.py         ← GoModScanner, GoSumScanner
+│   ├── cargo.py          ← CargoTomlScanner, CargoLockScanner
+│   ├── maven.py          ← PomXmlScanner
+│   ├── gradle.py         ← GradleScanner
+│   ├── rubygems.py       ← GemfileScanner, GemfileLockScanner
+│   ├── nuget.py          ← NuGetScanner (.csproj, packages.config, packages.lock.json)
 │   ├── conan.py          ← ConanfileTxtScanner, ConanfilePyScanner (AST)
 │   ├── cmake.py          ← CMakeScanner (find_package, FetchContent, ExternalProject, CPM)
 │   ├── ros.py            ← PackageXmlScanner (REP-149 package.xml, ament variable expansion)
 │   └── makefile.py       ← MakefileScanner (-l flags, pkg-config, git clone / Yocto)
 ├── reporters/
-│   ├── spdx.py           ← SPDX 2.3 JSON document builder + deduplication
+│   ├── spdx.py           ← SPDX 3.0.1 JSON-LD document builder + deduplication
 │   └── cyclonedx.py      ← CycloneDX 1.6 JSON document builder + deduplication
 └── upload/
     └── dtrack.py         ← Dependency-Track HTTP client (upload, poll, lookup)
@@ -491,7 +645,7 @@ pytest tests/ -v
 ```
 
 ```
-119 passed in 0.21s
+140 passed in 0.35s
 ```
 
 Test coverage:
@@ -500,12 +654,18 @@ Test coverage:
 | --- | --- |
 | npm scanner (package.json, package-lock.json v1–v3) | 6 |
 | PyPI scanner (requirements.txt, pyproject.toml, poetry.lock) | 9 |
+| Go modules scanner (go.mod, go.sum) | 5 |
+| Cargo scanner (Cargo.toml, Cargo.lock) | 5 |
+| Maven scanner (pom.xml, property expansion) | 3 |
+| Gradle scanner (build.gradle, build.gradle.kts, gradle.lockfile) | 2 |
+| RubyGems scanner (Gemfile, Gemfile.lock) | 2 |
+| NuGet scanner (.csproj, packages.config, packages.lock.json) | 3 |
 | Conan scanner (conanfile.txt, conanfile.py AST) | 6 |
 | CMake scanner (find_package, FetchContent, ExternalProject, CPM) | 26 |
 | ROS/ROS2 scanner (package.xml, ament variable expansion) | 20 |
 | Makefile scanner (LDFLAGS, LDLIBS, pkg-config, git clone) | 6 |
 | Walker (recursion, skip-dirs, error isolation) | 3 |
-| SPDX 2.3 reporter (fields, PURLs, deduplication, relationships) | 6 |
+| SPDX 3.0.1 reporter (fields, PURLs, deduplication, relationships) | 11 |
 | CycloneDX 1.6 reporter (fields, license forms, deduplication) | 11 |
 | Dependency-Track client (upload, poll, lookup, errors, CLI) | 26 |
 
@@ -579,12 +739,12 @@ coverage report --fail-under=80
 ### v0.2 — Ecosystem coverage
 
 - [x] **CMake** — `CMakeLists.txt` (`find_package`, `FetchContent`, `ExternalProject`, `CPM`) — shipped in v0.1
-- [ ] **Go modules** — `go.mod` / `go.sum`
-- [ ] **Cargo (Rust)** — `Cargo.toml` / `Cargo.lock`
-- [ ] **Maven (Java)** — `pom.xml`
-- [ ] **Gradle** — `build.gradle` / `build.gradle.kts`
-- [ ] **RubyGems** — `Gemfile` / `Gemfile.lock`
-- [ ] **NuGet (.NET)** — `*.csproj` / `packages.config`
+- [x] **Go modules** — `go.mod` / `go.sum`
+- [x] **Cargo (Rust)** — `Cargo.toml` / `Cargo.lock`
+- [x] **Maven (Java)** — `pom.xml`
+- [x] **Gradle** — `build.gradle` / `build.gradle.kts`
+- [x] **RubyGems** — `Gemfile` / `Gemfile.lock`
+- [x] **NuGet (.NET)** — `*.csproj` / `packages.config` / `packages.lock.json`
 
 ### v0.3 — Richer metadata
 

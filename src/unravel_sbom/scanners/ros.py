@@ -13,8 +13,9 @@ Reference: https://ros.org/reps/rep-0149.html
 from __future__ import annotations
 
 import logging
-import defusedxml.ElementTree as ET
 from pathlib import Path
+
+import defusedxml.ElementTree as ET
 
 from unravel_sbom.models import Ecosystem, Package, ScanResult
 from unravel_sbom.scanners.base import BaseScanner
