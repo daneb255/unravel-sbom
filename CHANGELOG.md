@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-14
+
 ### Added
 
 - npm: the SHA-512 (or SHA-384/256) from the lockfile `integrity` field is written as `hashes` (CycloneDX) and `verifiedUsing` (SPDX 3). SHA-1 is skipped.
