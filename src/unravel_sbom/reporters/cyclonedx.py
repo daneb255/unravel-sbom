@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Any
 
 from unravel_sbom import __version__
-from unravel_sbom.models import Ecosystem, Package, ScanResult
+from unravel_sbom.models import Ecosystem, Package, ScanResult, unique_ref_by_name
 
 logger = logging.getLogger(__name__)
 
@@ -35,9 +35,6 @@ _ECOSYSTEM_TYPE: dict[Ecosystem, str] = {
     Ecosystem.NUGET: "library",
     Ecosystem.GENERIC: "library",
 }
-
-# Map scope strings to CycloneDX scope values
-_SCOPE_MAP = {"runtime": "required", "build": "optional"}
 
 
 def _serial_number() -> str:
@@ -73,10 +70,6 @@ def _package_to_component(pkg: Package) -> dict[str, Any]:
         "purl": pkg.purl,
     }
 
-    scope = getattr(pkg, "scope", None)
-    if scope and scope in _SCOPE_MAP:
-        comp["scope"] = _SCOPE_MAP[scope]
-
     lic = _licenses(pkg.license_id)
     if lic:
         comp["licenses"] = lic
@@ -85,18 +78,14 @@ def _package_to_component(pkg: Package) -> dict[str, Any]:
     if sup:
         comp["supplier"] = sup
 
+    if pkg.hashes:
+        comp["hashes"] = [{"alg": a, "content": c} for a, c in pkg.hashes.items()]
+
     ext_refs: list[dict[str, Any]] = []
     if pkg.homepage:
         ext_refs.append({"type": "website", "url": pkg.homepage})
-    resolved_path = getattr(pkg, "resolved_path", None)
-    if resolved_path:
-        ext_refs.append({"type": "distribution", "url": f"file://{resolved_path}"})
     if ext_refs:
         comp["externalReferences"] = ext_refs
-
-    evidence = getattr(pkg, "evidence", None)
-    if evidence:
-        comp["evidence"] = {"occurrences": [{"location": ev} for ev in evidence]}
 
     return comp
 
@@ -123,6 +112,17 @@ def generate(
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
     components = [_package_to_component(p) for p in packages]
+    by_name = unique_ref_by_name(packages)
+    dependencies = [
+        {
+            "ref": pkg.spdx_id,
+            "dependsOn": sorted(
+                {by_name[d].spdx_id for d in pkg.depends_on if d in by_name}
+                - {pkg.spdx_id}
+            ),
+        }
+        for pkg in packages
+    ]
 
     return {
         "$schema": "http://cyclonedx.org/schema/bom-1.6.schema.json",
@@ -147,6 +147,7 @@ def generate(
             },
         },
         "components": components,
+        "dependencies": dependencies,
     }
 
 

@@ -28,20 +28,16 @@ _REQ_LINE_RE = re.compile(
     """,
     re.VERBOSE,
 )
-# Extract the first concrete version from a specifier string, e.g. "==1.2.3" → "1.2.3"
-_VERSION_RE = re.compile(r"[=!<>~^]{1,2}\s*([A-Za-z0-9._*+-]+)")
 
 
 def _extract_version(spec: str) -> str:
-    """Return the first pinned/ranged version from a PEP-508 specifier, or 'unknown'."""
+    """Return the exact pin (==) from a PEP-508 specifier, or 'unknown' for ranges."""
     if not spec:
         return "unknown"
-    # Prefer exact pins
-    exact = re.search(r"==\s*([A-Za-z0-9._+-]+)", spec)
+    exact = re.search(r"(?<![=!<>~])===?\s*([A-Za-z0-9._+-]+)", spec)
     if exact:
         return exact.group(1)
-    m = _VERSION_RE.search(spec)
-    return m.group(1) if m else "unknown"
+    return "unknown"
 
 
 class RequirementsTxtScanner(BaseScanner):
@@ -75,6 +71,7 @@ class RequirementsTxtScanner(BaseScanner):
 
 class PyprojectTomlScanner(BaseScanner):
     MANIFEST_NAMES = ("pyproject.toml",)
+    SUPERSEDED_BY = ("poetry.lock",)
 
     def scan(self, path: Path) -> ScanResult:
         result = ScanResult()

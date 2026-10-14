@@ -294,10 +294,8 @@ def scan_cmd(
 
     \b
     Supported ecosystems:
-      • npm       (package.json, package-lock.json)
-      • PyPI      (requirements.txt, pyproject.toml, poetry.lock)
-      • Conan     (conanfile.txt, conanfile.py)
-      • Makefile  (LDFLAGS / LDLIBS / pkg-config calls)
+      • npm, PyPI, Go, Cargo, Maven, Gradle, RubyGems, NuGet
+      • Conan, CMake, Makefile (LDFLAGS / pkg-config / Yocto), ROS
 
     \b
     Dependency-Track upload (requires --dtrack-url + --dtrack-key):
@@ -528,6 +526,176 @@ def dtrack_lookup(
         raise SystemExit(1)
 
     click.echo(json.dumps(project, indent=2))
+
+
+# ---------------------------------------------------------------------------
+# `check` command  (SBOM + scanners + upload, one step for a CI job)
+# ---------------------------------------------------------------------------
+
+
+@cli.command("check")
+@click.argument("source", type=click.Path(exists=True, file_okay=False, path_type=Path))
+@click.option(
+    "--cra-url",
+    envvar="CRA_URL",
+    metavar="URL",
+    help="CRA platform URL. Also $CRA_URL.",
+)
+@click.option(
+    "--cra-key",
+    envvar="CRA_API_KEY",
+    metavar="KEY",
+    help="Platform API key. Also $CRA_API_KEY.",
+)
+@click.option(
+    "--cra-version",
+    envvar="CRA_VERSION",
+    metavar="VERSION",
+    help="Release version as created in the platform. Also $CRA_VERSION.",
+)
+@click.option(
+    "--output-dir",
+    type=click.Path(file_okay=False, path_type=Path),
+    default=Path("unravel-check"),
+    show_default=True,
+    help="Where the SBOM and the scanner reports are written.",
+)
+@click.option(
+    "--skip",
+    "skip",
+    multiple=True,
+    type=click.Choice(["trivy", "opengrep", "cppcheck"]),
+    help="Do not run this tool (repeatable).",
+)
+@click.option(
+    "--opengrep-config",
+    type=click.Path(exists=True, path_type=Path),
+    default=None,
+    help="Opengrep rules (file or directory). Without rules opengrep is skipped.",
+)
+@click.option("--dry-run", is_flag=True, help="Run everything but do not upload.")
+@click.option(
+    "--fail-on-findings",
+    is_flag=True,
+    help="Exit 1 if the platform reports findings. Default: only errors fail the job.",
+)
+@_add_dtrack_options
+@click.option("-v", "--verbose", is_flag=True, help="Enable debug logging.")
+def check_cmd(
+    source: Path,
+    cra_url: str | None,
+    cra_key: str | None,
+    cra_version: str | None,
+    output_dir: Path,
+    skip: tuple[str, ...],
+    opengrep_config: Path | None,
+    dry_run: bool,
+    fail_on_findings: bool,
+    dtrack_url: str | None,
+    dtrack_key: str | None,
+    dtrack_project_name: str | None,
+    dtrack_project_version: str,
+    dtrack_project_uuid: str | None,
+    dtrack_auto_create: bool,
+    dtrack_wait: bool,
+    dtrack_timeout: int,
+    verbose: bool,
+) -> None:
+    """Create the evidence for a release in one step and upload it to the CRA platform.
+
+    \b
+    1. Scans SOURCE and writes a CycloneDX 1.6 SBOM.
+    2. Runs trivy (secrets, vulnerabilities), opengrep and cppcheck when installed.
+    3. Uploads the SBOM and the SARIF reports to the platform (POST /api/v1/ci/ingest).
+    4. Optionally uploads the SBOM to Dependency-Track.
+
+    \b
+    Exit codes: 0 done, 1 upload failed (or findings with --fail-on-findings),
+                2 a tool failed. A failed tool is never uploaded as "no findings".
+    """
+    from unravel_sbom import check as chk
+    from unravel_sbom.reporters import cyclonedx as cdx_reporter
+    from unravel_sbom.upload.cra import CraError, ingest
+
+    _setup_logging(verbose)
+    if not dry_run and not (cra_url and cra_key and cra_version):
+        raise click.UsageError(
+            "--cra-url, --cra-key and --cra-version are required (or use --dry-run)."
+        )
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    click.echo(f"Scanning {source.resolve()} …", err=True)
+    with _progress_context(not verbose) as on_file:
+        result: ScanResult = walk(source, ALL_SCANNERS, on_file=on_file)
+    cdx_doc = cdx_reporter.generate(result, scan_root=source, document_name=None)
+    sbom = output_dir / "sbom.cdx.json"
+    cdx_reporter.write(cdx_doc, sbom)
+    click.echo(f"  SBOM → {sbom}  ({len(cdx_doc['components'])} components)", err=True)
+
+    tools = chk.run_tools(
+        source, output_dir, skip=frozenset(skip), opengrep_config=opengrep_config
+    )
+    mark = {"ok": "✓", "skipped": "-", "error": "✗"}
+    for t in tools:
+        note = f"  ({t.message})" if t.message else ""
+        click.echo(f"  {mark[t.status]} {t.tool:<9} {t.source:<9}{note}", err=True)
+    tool_failed = any(t.status == "error" for t in tools)
+
+    uploads = {"sbom": sbom, **chk.collect_uploads(tools, output_dir)}
+    upload_failed = findings = False
+    if dry_run:
+        click.echo(f"  Dry run: would upload {', '.join(uploads)}.", err=True)
+    else:
+        assert cra_url and cra_key and cra_version
+        commit, pipeline = chk.ci_meta()
+        for name, path in uploads.items():
+            try:
+                answer = ingest(
+                    cra_url,
+                    cra_key,
+                    name,
+                    cra_version,
+                    path,
+                    commit=commit,
+                    pipeline_url=pipeline,
+                )
+            except CraError as exc:
+                click.echo(f"  Upload {name} ✗  {exc.detail}", err=True)
+                upload_failed = True
+                continue
+            findings |= answer["ergebnis"] != "ok"
+            click.echo(
+                f"  Upload {name} ✓  {answer['ergebnis']}: {answer['zusammenfassung']}",
+                err=True,
+            )
+            for change in answer.get("status_aenderungen", []):
+                click.echo(
+                    f"    {change['control_id']}: {change['von']} → {change['nach']}",
+                    err=True,
+                )
+
+    if dtrack_url and dtrack_key and not dry_run:
+        _do_dtrack_upload(
+            cdx_doc,
+            base_url=dtrack_url,
+            api_key=dtrack_key,
+            project_name=dtrack_project_name or source.resolve().name,
+            project_version=dtrack_project_version,
+            project_uuid=dtrack_project_uuid,
+            auto_create=dtrack_auto_create,
+            wait=dtrack_wait,
+            timeout=dtrack_timeout,
+        )
+    elif dtrack_url or dtrack_key:
+        click.echo(
+            "  Warning: --dtrack-url and --dtrack-key are both needed - skipping.",
+            err=True,
+        )
+
+    if tool_failed:
+        raise SystemExit(2)
+    if upload_failed or (fail_on_findings and findings):
+        raise SystemExit(1)
 
 
 main = cli

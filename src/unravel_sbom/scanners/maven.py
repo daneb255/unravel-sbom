@@ -110,9 +110,5 @@ class PomXmlScanner(BaseScanner):
             tag = _strip_ns(child.tag)
             if tag == "dependencies":
                 parse_dep_container(child)
-            elif tag == "dependencyManagement":
-                for sub in child:
-                    if _strip_ns(sub.tag) == "dependencies":
-                        parse_dep_container(sub)
 
         return result

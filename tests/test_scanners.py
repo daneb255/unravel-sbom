@@ -27,15 +27,16 @@ class TestPackageJsonScanner:
         assert "jest" in names
         assert "@types/node" in names
 
-    def test_strips_range_prefix(self):
+    def test_range_is_not_a_version(self):
         result = self._scan(FIXTURES / "npm" / "package.json")
         express = next(p for p in result.packages if p.name == "express")
-        assert express.version == "4.18.2"
+        assert express.version == "unknown"
 
     def test_scoped_package_purl(self):
         result = self._scan(FIXTURES / "npm" / "package.json")
         types_node = next(p for p in result.packages if p.name == "@types/node")
-        assert types_node.purl.startswith("pkg:npm/types/node@")
+        # purl spec: the scope keeps its "@", percent-encoded (Trivy, Grype and Dependency-Track match on it)
+        assert types_node.purl.startswith("pkg:npm/%40types/node@")
 
 
 class TestPackageLockScanner:
@@ -570,7 +571,6 @@ class TestSpdxReporter:
             "spdxId",
             "name",
             "software_packageVersion",
-            "originatedBy",
             "creationInfo",
             "externalIdentifiers",
         }

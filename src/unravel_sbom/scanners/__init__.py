@@ -1,7 +1,7 @@
 from unravel_sbom.scanners.cargo import CargoLockScanner, CargoTomlScanner
 from unravel_sbom.scanners.cmake import CMakeScanner
 from unravel_sbom.scanners.conan import ConanfilePyScanner, ConanfileTxtScanner
-from unravel_sbom.scanners.golang import GoModScanner, GoSumScanner
+from unravel_sbom.scanners.golang import GoModScanner
 from unravel_sbom.scanners.gradle import GradleScanner
 from unravel_sbom.scanners.makefile import MakefileScanner
 from unravel_sbom.scanners.maven import PomXmlScanner
@@ -19,7 +19,6 @@ ALL_SCANNERS = [
     # Lock-file scanners first: they carry exact/resolved versions
     PackageLockScanner(),
     PoetryLockScanner(),
-    GoSumScanner(),
     CargoLockScanner(),
     GemfileLockScanner(),
     # Manifest & build file scanners

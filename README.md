@@ -216,6 +216,7 @@ Scanning /home/user/projects/my-app …
 
 ```
 unravel-sbom scan     — scan a directory and write an SBOM
+unravel-sbom check    — SBOM + scanners + upload to a CRA platform, for one CI job
 unravel-sbom upload   — upload an existing CycloneDX BOM to Dependency-Track
 unravel-sbom dtrack   — Dependency-Track project management utilities
 ```
@@ -245,6 +246,29 @@ Options:
   -v, --verbose                   Enable debug logging
   -h, --help                      Show this message and exit
 ```
+
+### `unravel-sbom check`
+
+One step for a CI job: scans the source, writes a CycloneDX 1.6 SBOM, runs the evidence tools that are installed
+and uploads the results to a CRA platform (`POST /api/v1/ci/ingest`).
+
+```
+unravel-sbom check . --cra-url https://cra.example.com --cra-version 1.4.2   # key from $CRA_API_KEY
+```
+
+| Tool | Runs | Result |
+|---|---|---|
+| unravel | always | SBOM (`sbom`) |
+| `trivy` | if installed | secrets (`secrets`) and vulnerabilities (`vulnscan`) as SARIF |
+| `opengrep` | if installed and `--opengrep-config RULES` is given | code analysis (`sast`) as SARIF |
+| `cppcheck` ≥ 2.16 | if installed and the source has C/C++ files | code analysis (`sast`) as SARIF, merged with opengrep |
+
+- Missing tools are skipped. A tool that **fails** (exit code, unreadable SARIF) is reported and **never uploaded**, so a crashed scanner cannot look like "no findings". Exit code 2.
+- Exit code 1: an upload failed, or findings with `--fail-on-findings`. Findings alone do not fail the job; the platform judges them.
+- `--skip trivy|opengrep|cppcheck`, `--output-dir DIR` (default `unravel-check`), `--dry-run` (run everything, upload nothing).
+- Commit and pipeline URL are taken from GitHub Actions or GitLab CI variables.
+- The Dependency-Track options of `scan` work here too and upload the SBOM in the same run.
+- Tool flags were checked against the tools' documentation, not against every release. Opengrep is asked which SARIF flag it supports (`--sarif-output` or `--sarif -o`).
 
 ### `unravel-sbom upload`
 

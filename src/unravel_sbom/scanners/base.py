@@ -16,6 +16,9 @@ class BaseScanner(ABC):
     MANIFEST_NAMES: tuple[str, ...] = ()
     # File extensions this scanner handles (e.g. ('.csproj', '.fsproj'))
     MANIFEST_EXTENSIONS: tuple[str, ...] = ()
+    # Lock-file names (lower-cased) in the same directory that make this
+    # manifest redundant: the lock file carries the resolved versions.
+    SUPERSEDED_BY: tuple[str, ...] = ()
 
     def matches(self, path: Path) -> bool:
         name_match = path.name.lower() in self.MANIFEST_NAMES

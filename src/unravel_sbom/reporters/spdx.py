@@ -40,7 +40,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from unravel_sbom.models import Package, ScanResult
+from unravel_sbom.models import Package, ScanResult, unique_ref_by_name
 
 logger = logging.getLogger(__name__)
 
@@ -139,7 +139,7 @@ def generate(
 
     # Map package names to their full spdxId for resolving dependency edges
     name_to_spdx_id: dict[str, str] = {
-        pkg.name: f"{ns}#{pkg.spdx_id}" for pkg in packages
+        n: f"{ns}#{p.spdx_id}" for n, p in unique_ref_by_name(packages).items()
     }
 
     root_elements: list[str] = []
@@ -168,7 +168,6 @@ def generate(
             "creationInfo": creation_info_id,
             "name": pkg.name,
             "software_packageVersion": version_str,
-            "originatedBy": [creator_agent_id],
             "externalIdentifiers": [
                 {
                     "type": "ExternalIdentifier",
@@ -177,6 +176,15 @@ def generate(
                 }
             ],
         }
+        if pkg.hashes:
+            pkg_node["verifiedUsing"] = [
+                {
+                    "type": "Hash",
+                    "algorithm": alg.replace("-", "").lower(),  # "SHA-512" -> "sha512"
+                    "hashValue": value,
+                }
+                for alg, value in pkg.hashes.items()
+            ]
         package_nodes.append(pkg_node)
 
         # License expression and licensing relationships

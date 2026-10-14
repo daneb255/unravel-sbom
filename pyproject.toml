@@ -4,14 +4,14 @@ build-backend = "hatchling.build"
 
 [project]
 name = "unravel-sbom"
-version = "0.2.0"
+version = "0.3.0"
 description = "Scan local development projects and generate SPDX 3.0.1 or CycloneDX 1.6 SBOMs"
 license = { file = "LICENSE" }
+readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "click==8.4.2",
     "defusedxml==0.7.1",
-    "toml==0.10.2",
     "tomli==2.4.1; python_version < '3.11'",
     "packageurl-python==0.17.6",
 ]
@@ -27,7 +27,6 @@ dev = [
     "ruff>=0.4",
     "mypy>=1.10",
     "bandit>=1.7",
-    "safety>=3.0",
 ]
 
 [project.scripts]

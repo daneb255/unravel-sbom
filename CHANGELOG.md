@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-14
+
+### Added
+
+- npm: the SHA-512 (or SHA-384/256) from the lockfile `integrity` field is written as `hashes` (CycloneDX) and `verifiedUsing` (SPDX 3). SHA-1 is skipped.
+- `unravel-sbom check`: a scanner run with rule timeouts or `executionSuccessful=false` is an error and is not uploaded.
+- `unravel-sbom check`: writes the SBOM, runs trivy, opengrep and cppcheck when installed, and uploads the results to a CRA platform in one step. A failed tool is never uploaded as "no findings".
+
+### Fixed
+
+- purl of scoped npm packages dropped the `@` (`pkg:npm/types/node`). It is now `pkg:npm/%40types/node` as the purl spec requires.
+
 ## [0.2.0] - 2026-08-25
 
 ### Added

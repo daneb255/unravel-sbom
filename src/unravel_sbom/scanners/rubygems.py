@@ -78,6 +78,7 @@ class GemfileScanner(BaseScanner):
     """Parses Gemfile manifest files for declared Ruby gem dependencies."""
 
     MANIFEST_NAMES = ("gemfile",)
+    SUPERSEDED_BY = ("gemfile.lock",)
 
     def scan(self, path: Path) -> ScanResult:
         result = ScanResult()
