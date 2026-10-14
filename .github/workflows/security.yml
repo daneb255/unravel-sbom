@@ -34,11 +34,11 @@ jobs:
 
       - name: Run Bandit (static security analysis)
         run: bandit -r src/ -f json -o bandit-report.json
-        continue-on-error: true
 
-      - name: Run Safety (dependency vulnerability check)
-        run: safety check --json > safety-report.json
-        continue-on-error: true
+      - name: Run pip-audit (dependency vulnerability check)
+        run: |
+          pip install pip-audit
+          pip-audit . --format json --output audit-report.json
 
       - name: Upload Bandit report
         uses: actions/upload-artifact@v7
@@ -48,12 +48,12 @@ jobs:
           path: bandit-report.json
           retention-days: 30
 
-      - name: Upload Safety report
+      - name: Upload pip-audit report
         uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: safety-report
-          path: safety-report.json
+          name: audit-report
+          path: audit-report.json
           retention-days: 30
 
       - name: Comment PR with security results
@@ -74,12 +74,12 @@ jobs:
             }
 
             try {
-              const safety = JSON.parse(fs.readFileSync('safety-report.json', 'utf8'));
-              const vulns = safety.vulnerabilities?.length || 0;
+              const audit = JSON.parse(fs.readFileSync('audit-report.json', 'utf8'));
+              const vulns = audit.dependencies?.filter(d => d.vulns?.length).length || 0;
               const icon = vulns > 0 ? '⚠️' : '✅';
-              comment += `${icon} **Safety**: ${vulns > 0 ? vulns + ' vulnerability/ies found' : 'No vulnerabilities found'}\n`;
+              comment += `${icon} **pip-audit**: ${vulns > 0 ? vulns + ' vulnerability/ies found' : 'No vulnerabilities found'}\n`;
             } catch (e) {
-              comment += '❌ **Safety**: Failed to run\n';
+              comment += '❌ **pip-audit**: Failed to run\n';
             }
 
             github.rest.issues.createComment({

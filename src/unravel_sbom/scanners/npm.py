@@ -1,13 +1,17 @@
 from __future__ import annotations
 
+import base64
 import json
 import logging
+import re
 from pathlib import Path
 
 from unravel_sbom.models import Ecosystem, Package, ScanResult
 from unravel_sbom.scanners.base import BaseScanner
 
 logger = logging.getLogger(__name__)
+
+_EXACT_VERSION_RE = re.compile(r"^v?\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.+-]+)?$")
 
 # Minimal SPDX license ID mapping for the most common npm licences.
 # Everything unknown falls back to NOASSERTION.
@@ -36,10 +40,31 @@ def _normalise_license(raw: str | None) -> str:
     return _LICENSE_MAP.get(raw.strip(), raw.strip() or "NOASSERTION")
 
 
+_INTEGRITY_ALGS = {"sha512": "SHA-512", "sha384": "SHA-384", "sha256": "SHA-256"}
+
+
+def _integrity_hashes(integrity: object) -> dict[str, str]:
+    """npm "integrity" (SRI: "sha512-<base64> ...") as {"SHA-512": "<hex>"}. SHA-1 is skipped as too weak."""
+    hashes: dict[str, str] = {}
+    if not isinstance(integrity, str):
+        return hashes
+    for entry in integrity.split():
+        alg, _, b64 = entry.partition("-")
+        if alg in _INTEGRITY_ALGS and b64:
+            try:
+                hashes[_INTEGRITY_ALGS[alg]] = base64.b64decode(
+                    b64, validate=True
+                ).hex()
+            except ValueError:
+                continue
+    return hashes
+
+
 class PackageJsonScanner(BaseScanner):
     """Scans package.json for direct dependencies."""
 
     MANIFEST_NAMES = ("package.json",)
+    SUPERSEDED_BY = ("package-lock.json",)
 
     def scan(self, path: Path) -> ScanResult:
         result = ScanResult()
@@ -53,8 +78,12 @@ class PackageJsonScanner(BaseScanner):
         deps.update(data.get("optionalDependencies", {}))
 
         for name, version_range in deps.items():
-            # Strip semver range prefixes: ^1.2.3 → 1.2.3
-            version = version_range.lstrip("^~>=<").split(" ")[0].strip() or "unknown"
+            # Only exact pins are versions; ranges, workspace:, file:, git+ are not.
+            version = (
+                version_range.strip()
+                if _EXACT_VERSION_RE.match(version_range.strip())
+                else "unknown"
+            )
             pkg = Package(
                 name=name,
                 version=version,
@@ -93,6 +122,7 @@ class PackageLockScanner(BaseScanner):
                     license_id=license_id,
                     source_file=path,
                     depends_on=depends_on,
+                    hashes=_integrity_hashes(info.get("integrity")),
                 )
                 result.packages.append(pkg)
         else:
@@ -107,6 +137,7 @@ class PackageLockScanner(BaseScanner):
                     ecosystem=Ecosystem.NPM,
                     source_file=path,
                     depends_on=depends_on,
+                    hashes=_integrity_hashes(info.get("integrity")),
                 )
                 result.packages.append(pkg)
 

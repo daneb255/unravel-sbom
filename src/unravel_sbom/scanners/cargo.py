@@ -64,6 +64,7 @@ class CargoTomlScanner(BaseScanner):
     """Parses Cargo.toml manifest files for declared Rust crate dependencies."""
 
     MANIFEST_NAMES = ("cargo.toml",)
+    SUPERSEDED_BY = ("cargo.lock",)
 
     def scan(self, path: Path) -> ScanResult:
         result = ScanResult()

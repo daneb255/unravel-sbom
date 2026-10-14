@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
@@ -28,6 +29,8 @@ class Package:
     # Extra metadata populated by scanners that can resolve it
     homepage: str | None = None
     depends_on: list[str] = field(default_factory=list)
+    # Hash of the resolved artifact, e.g. {"SHA-512": "<hex>"} (npm: package-lock "integrity")
+    hashes: dict[str, str] = field(default_factory=dict)
 
     @property
     def purl(self) -> str:
@@ -37,10 +40,9 @@ class Package:
         version = self.version or None
         match self.ecosystem:
             case Ecosystem.NPM:
-                # scoped packages: @scope/name
+                # scoped packages: the purl spec keeps the "@" of the scope, encoded as %40
                 if "/" in name:
                     namespace, name = name.split("/", 1)
-                    namespace = namespace.lstrip("@")
                     return str(
                         PackageURL(
                             "npm", namespace=namespace, name=name, version=version
@@ -48,11 +50,7 @@ class Package:
                     )
                 return str(PackageURL("npm", name=name, version=version))
             case Ecosystem.PYPI:
-                return str(
-                    PackageURL(
-                        "pypi", name=name.lower().replace("-", "_"), version=version
-                    )
-                )
+                return str(PackageURL("pypi", name=name, version=version))
             case Ecosystem.CONAN:
                 return str(PackageURL("conan", name=name, version=version))
             case Ecosystem.GOLANG:
@@ -103,7 +101,23 @@ class Package:
             .replace("^", "")
             .replace("~", "")
         )
-        return f"SPDXRef-{self.ecosystem.value}-{safe}-{ver}"
+        digest = hashlib.sha1(  # nosec B324
+            f"{self.ecosystem.value}:{self.name}@{self.version}".encode(),
+            usedforsecurity=False,
+        ).hexdigest()[:8]
+        return f"SPDXRef-{self.ecosystem.value}-{safe}-{ver}-{digest}"
+
+
+def unique_ref_by_name(packages: list[Package]) -> dict[str, Package]:
+    """Map name → package, only for names with exactly one version present.
+
+    A bare dependency name is ambiguous when several versions exist, so those
+    names are left out rather than linked to a guessed version.
+    """
+    by_name: dict[str, list[Package]] = {}
+    for pkg in packages:
+        by_name.setdefault(pkg.name, []).append(pkg)
+    return {n: ps[0] for n, ps in by_name.items() if len(ps) == 1}
 
 
 @dataclass

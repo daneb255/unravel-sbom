@@ -32,6 +32,10 @@ _SKIP_DIRS = frozenset(
         "dist",
         "build",
         ".eggs",
+        "node_modules",
+        "target",
+        ".gradle",
+        "vendor",
     }
 )
 
@@ -62,6 +66,8 @@ def walk(
         aggregate.errors.append((root, str(exc)))
         return aggregate
 
+    sibling_names = {e.name.lower() for e in entries}
+
     for entry in entries:
         try:
             if entry.is_symlink():
@@ -86,6 +92,9 @@ def walk(
             elif entry.is_file():
                 for scanner in scanners:
                     if scanner.matches(entry):
+                        if sibling_names.intersection(scanner.SUPERSEDED_BY):
+                            logger.debug("Skipping %s: lockfile present", entry)
+                            break
                         logger.debug("Matched %s → %s", entry, type(scanner).__name__)
                         if on_file is not None:
                             on_file(entry)
